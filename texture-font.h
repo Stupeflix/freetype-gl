@@ -234,6 +234,11 @@ typedef struct
     char * filename;
 
     /**
+     * Characters cache.
+     */
+    wchar_t * cache;
+
+    /**
      * Font size
      */
     float size;
@@ -372,6 +377,7 @@ typedef struct
  *
  * @param self      a valid texture font
  * @param charcodes character codepoints to be loaded.
+ * @param padding   the padding between each letters
  *
  * @return Number of missed glyph if the texture is not big enough to hold
  *         every glyphs.
@@ -379,6 +385,31 @@ typedef struct
   size_t
   texture_font_load_glyphs( texture_font_t * self,
                             const wchar_t * charcodes );
+
+/**
+ * Request the loading of several glyphs at once.
+ *
+ * @param self      a valid texture font
+ * @param charcodes character codepoints to be loaded.
+ * @param padding   the padding between each letters
+ *
+ * @return Number of missed glyph if the texture is not big enough to hold
+ *         every glyphs.
+ */
+  size_t
+  texture_font_load_glyphs_with_padding( texture_font_t * self,
+                            const wchar_t * charcodes,
+                            size_t padding );
+
+/**
+ * Load all unicodes characters for this font (0 to 65536).
+ *
+ * @param self      a valid texture font
+ * @param padding   the paddding between each letters
+ */
+size_t
+texture_font_load_with_padding( texture_font_t * self,
+                                size_t padding );
 
 /**
  * Get the kerning between two horizontal glyphs.

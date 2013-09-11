@@ -34,6 +34,8 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.5 )
 SET( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules"
                        "${CMAKE_MODULE_PATH}" )
 
+SET( CMAKE_CXX_FLAGS "-ggdb3")
+
 OPTION(freetype-gl_BUILD_DEMOS "Build the freetype-gl example programs" ON)
 
 # Get required and optional library
@@ -135,6 +137,7 @@ DEMO( makefont              "makefont.c" )
 DEMO( demo-distance-field   "demo-distance-field.c;edtaa3func.c")
 DEMO( demo-distance-field-2 "demo-distance-field-2.c;edtaa3func.c")
 DEMO( demo-distance-field-3 "demo-distance-field-3.c;edtaa3func.c")
+DEMO( compute-distmap       "compute-distmap.c;edtaa3func.c" )
 
 IF (FONTCONFIG_FOUND)
    INCLUDE_DIRECTORIES( ${FONTCONFIG_INCLUDE_DIR} )
@@ -181,7 +184,7 @@ file(COPY ${Fonts}   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/fonts)
 FILE(GLOB Data   "data/256colors.txt")
 file(COPY ${Data}   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 
-FILE(GLOB Shaders "shaders/*.vert" "shaders/*.frag")
+FILE(GLOB Shaders "shaders/*.vert" "shaders/*.frag" "shaders/*.glsl")
 file(COPY ${Shaders} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 
 ENDIF (freetype-gl_BUILD_DEMOS)

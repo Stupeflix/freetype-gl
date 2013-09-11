@@ -264,7 +264,7 @@ main( int argc, char **argv )
     unsigned char *map;
     texture_font_t * font;
     const char *filename = "fonts/Vera.ttf";
-    const wchar_t *cache = L" !\"#$%&'()*+,-./0123456789:;<=>?"
+    const wchar_t *cache = L"!\"#$%&'()*+,-./0123456789:;<=>?"
                            L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
                            L"`abcdefghijklmnopqrstuvwxyz{|}~";
 

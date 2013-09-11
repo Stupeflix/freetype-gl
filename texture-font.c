@@ -56,7 +56,39 @@ const struct {
 #include FT_ERRORS_H
 
 
+static wchar_t * _get_all_charcodes()
+{
+        wchar_t *cache = (wchar_t *) malloc(65536 * sizeof(wchar_t));
+    wchar_t i;
+    if (cache == NULL)
+    {
+        fprintf(stderr, "Error: Cannot allocate unicode cache.\n");
+        return 0;
+    }
+    for (i = 32; i < 65536; ++i)
+        cache[i - 32] = i;
+    cache[i] = 0;
+    return cache;
+}
 
+static int _compute_atlas( texture_font_t * self,
+                           FT_Face face )
+{
+    size_t size = 0;
+    size_t i;
+
+    for( i=0; i<wcslen(self->cache); ++i )
+    {
+        if (self->cache[i] == '\n')
+            continue;
+        if(FT_Get_Char_Index( face, self->cache[i] ))
+            size++;
+    }
+    size = (1 << (32 - __builtin_clz(sqrt(size) * 50)));
+    // printf("size = %d\n", size);
+    self->atlas = texture_atlas_new( size, size, 1 );
+    return 0;
+}
 
 // ------------------------------------------------- texture_font_load_face ---
 int
@@ -245,6 +277,8 @@ texture_font_new( texture_atlas_t * atlas,
     assert( filename );
     assert( size );
 
+    self->cache = _get_all_charcodes();
+
     if( self == NULL)
     {
         fprintf( stderr,
@@ -278,6 +312,9 @@ texture_font_new( texture_atlas_t * atlas,
         return self;
     }
 
+    if (self->atlas == NULL)
+        _compute_atlas( self, face );
+
     // 64 * 64 because of 26.6 encoding AND the transform matrix used
     // in texture_font_load_face (hres = 64)
     self->underline_position = face->underline_position / (float)(64.0f*64.0f) * self->size;
@@ -303,11 +340,10 @@ texture_font_new( texture_atlas_t * atlas,
     FT_Done_FreeType( library );
 
     /* -1 is a special glyph */
-    texture_font_get_glyph( self, -1 );
+    // texture_font_get_glyph( self, -1 );
 
     return self;
 }
-
 
 // ---------------------------------------------------- texture_font_delete ---
 void
@@ -340,6 +376,23 @@ size_t
 texture_font_load_glyphs( texture_font_t * self,
                           const wchar_t * charcodes )
 {
+    return texture_font_load_glyphs_with_padding(self, charcodes, 1);
+}
+
+// ----------------------------------------- texture_font_load_with_padding ---
+size_t
+texture_font_load_with_padding( texture_font_t * self,
+                                size_t padding )
+{
+    return texture_font_load_glyphs_with_padding(self, self->cache, padding);
+}
+
+// ---------------------------------- texture_font_load_glyphs_with_padding ---
+size_t
+texture_font_load_glyphs_with_padding( texture_font_t * self,
+                          const wchar_t * charcodes,
+                          size_t padding )
+{
     size_t i, x, y, width, height, depth, w, h;
     FT_Library library;
     FT_Error error;
@@ -356,15 +409,14 @@ texture_font_load_glyphs( texture_font_t * self,
     assert( self );
     assert( charcodes );
 
-
-    width  = self->atlas->width;
-    height = self->atlas->height;
-    depth  = self->atlas->depth;
-
     if( !texture_font_load_face( &library, self->filename, self->size, &face ) )
     {
         return wcslen(charcodes);
     }
+
+    width  = self->atlas->width;
+    height = self->atlas->height;
+    depth  = self->atlas->depth;
 
     /* Load each glyph */
     for( i=0; i<wcslen(charcodes); ++i )
@@ -378,7 +430,8 @@ texture_font_load_glyphs( texture_font_t * self,
         glyph_index = FT_Get_Char_Index( face, charcodes[i] );
         // WARNING: We use texture-atlas depth to guess if user wants
         //          LCD subpixel rendering
-
+        if (glyph_index == 0) // skip
+            continue;
         if( self->outline_type > 0 )
         {
             flags |= FT_LOAD_NO_BITMAP;
@@ -396,7 +449,6 @@ texture_font_load_glyphs( texture_font_t * self,
         {
             flags |= FT_LOAD_FORCE_AUTOHINT;
         }
-
 
         if( depth == 3 )
         {
@@ -519,19 +571,19 @@ texture_font_load_glyphs( texture_font_t * self,
 
         // We want each glyph to be separated by at least one black pixel
         // (for example for shader used in demo-subpixel.c)
-        w = ft_bitmap_width/depth + 1;
-        h = ft_bitmap_rows + 1;
+        w = ft_bitmap_width/depth + padding;
+        h = ft_bitmap_rows + padding;
         region = texture_atlas_get_region( self->atlas, w, h );
         if ( region.x < 0 )
         {
             missed++;
-            fprintf( stderr, "Texture atlas is full (line %d)\n",  __LINE__ );
-            continue;
+            fprintf( stderr, "Texture atlas is full (line %d) (size %lu)\n",  __LINE__, i );
+            break;
         }
-        w = w - 1;
-        h = h - 1;
-        x = region.x;
-        y = region.y;
+        w = w - padding;
+        h = h - padding;
+        x = region.x + (padding >> 1);
+        y = region.y + (padding >> 1);
         texture_atlas_set_region( self->atlas, x, y, w, h,
                                   ft_bitmap.buffer, ft_bitmap.pitch );
 
