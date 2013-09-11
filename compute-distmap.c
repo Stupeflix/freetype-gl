@@ -99,6 +99,24 @@ create_atlas_file(char const *output_name)
     return 0;
 }
 
+void
+print_kerning(FILE *file_stream, vector_t *kerning)
+{
+    size_t i;
+    fprintf(file_stream, "[");
+    for ( i=0;i<vector_size(kerning);++i )
+    {
+        kerning_t const *k = vector_get( kerning, i );
+        if (k->charcode == '\'')
+            fprintf(file_stream, "{'charcode':'\\'','value':%f},", k->kerning);
+        else if (k->charcode == '\\')
+            fprintf(file_stream, "{'charcode':'\\\\','value':%f},", k->kerning);
+        else
+            fprintf(file_stream, "{'charcode':'%c','value':%f},", k->charcode, k->kerning);
+    }
+    fprintf(file_stream, "]");
+}
+
 // ----------------------------------------------------- create_python_file ---
 int
 create_python_file(const char *output_name)
@@ -133,24 +151,30 @@ create_python_file(const char *output_name)
         if (glyph->charcode == '\'')
         {
             fprintf(file_stream,
-                "    '\\'':{'s0':%f,'t0':%f,'s1':%f,'t1':%f},\n",
+                "    '\\'':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
                 glyph->s0, glyph->t0, glyph->s1, glyph->t1
             );
+            print_kerning(file_stream, glyph->kerning);
+            fprintf(file_stream, "},\n");
         }
         else if (glyph->charcode == '\\')
         {
             fprintf(file_stream,
-                "    '\\\\':{'s0':%f,'t0':%f,'s1':%f,'t1':%f},\n",
+                "    '\\\\':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
                 glyph->s0, glyph->t0, glyph->s1, glyph->t1
             );
+            print_kerning(file_stream, glyph->kerning);
+            fprintf(file_stream, "},\n");
         }
         else if (i != 194)
         {
             fprintf(file_stream,
-                "    '%c':{'s0':%f,'t0':%f,'s1':%f,'t1':%f},\n",
+                "    '%c':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
                 glyph->charcode,
                 glyph->s0, glyph->t0, glyph->s1, glyph->t1
             );
+            print_kerning(file_stream, glyph->kerning);
+            fprintf(file_stream, "},\n");
         }
     }
     fprintf(file_stream, "  }\n");
