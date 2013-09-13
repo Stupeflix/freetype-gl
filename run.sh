@@ -10,5 +10,4 @@ cd build && \
 cmake .. && \
 make && \
 ./compute-distmap ${FONT_NAME} ${NAME} ${RESOLUTION} && \
-python make_png.py ${NAME} && \
-eog ${NAME}.png
+python make_png.py ${NAME}

@@ -103,8 +103,8 @@ char *
 get_escaped_char(char c)
 {
     static char str[2];
-    if (c == '\'')
-        return "\\'";
+    if (c == '"')
+        return "\\\"";
     if (c == '\\')
         return "\\\\";
     if (c == '\n')
@@ -116,25 +116,50 @@ get_escaped_char(char c)
     return str;
 }
 
-void
-print_kerning(FILE *file_stream, vector_t *kerning)
+// ----------------------------------------------------- create_python_file ---
+int
+create_json_file(const char *output_name)
 {
-    size_t i;
-    fprintf(file_stream, "[");
-    for ( i=0;i<vector_size(kerning);++i )
+    char output_file[512];
+    strcpy(output_file, output_name);
+    strcat(output_file, ".json");
+
+    fprintf( stdout, "    Create \"%s\"...", output_file);
+    fflush( stdout );
+
+    FILE *file_stream = fopen(output_file, "w");
+    if( file_stream == NULL )
     {
-        kerning_t const *k = vector_get( kerning, i );
-        fprintf(
-            file_stream,
-            "{'charcode':'%s','value':%f},",
-            get_escaped_char(k->charcode),
-            k->kerning
+        fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
+        return 1;
+    }
+    fprintf(file_stream, "{\n");
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
+    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->glyphs->size);
+    fprintf(file_stream, "  \"glyphs\": {\n");
+    size_t i;
+    for( i = 1; i < font->glyphs->size; ++i )
+    {
+        texture_glyph_t const * glyph =
+            *(texture_glyph_t **)
+            vector_get(font->glyphs, i);
+        fprintf(file_stream,
+            "    \"%s\":{\"offset\":[%d,%d],\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
+            get_escaped_char(glyph->charcode),
+            glyph->offset_x, glyph->offset_y,
+            glyph->width, glyph->height,
+            glyph->s0, glyph->t0, glyph->s1, glyph->t1
         );
     }
-    fprintf(file_stream, "]");
+    fprintf(file_stream, "  }\n");
+    fprintf(file_stream, "}\n");
+    if (file_stream != NULL)
+        fclose(file_stream);
+    fprintf(stdout, "OK\n");
+    return 0;
 }
 
-// ----------------------------------------------------- create_python_file ---
 int
 create_python_file(const char *output_name)
 {
@@ -151,14 +176,13 @@ create_python_file(const char *output_name)
         fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
         return 1;
     }
-    fprintf(file_stream, "#!/usr/bin/env python\n", output_name);
+    fprintf(file_stream, "#!/usr/bin/env python\n");
     fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
-    fprintf(file_stream, "# Contains all %s's meta data to use distmap atlas from python.\n\n", output_name);
     fprintf(file_stream, "data = {\n");
-    fprintf(file_stream, "  'atlas_width': %lu,\n", font->atlas->width);
-    fprintf(file_stream, "  'atlas_height': %lu,\n", font->atlas->height);
-    fprintf(file_stream, "  'glyphs_number': %lu,\n", font->glyphs->size);
-    fprintf(file_stream, "  'glyphs': {\n");
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
+    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->glyphs->size);
+    fprintf(file_stream, "  \"glyphs\": {\n");
     size_t i;
     for( i = 1; i < font->glyphs->size; ++i )
     {
@@ -166,14 +190,12 @@ create_python_file(const char *output_name)
             *(texture_glyph_t **)
             vector_get(font->glyphs, i);
         fprintf(file_stream,
-            "    '%s':{'offset':[%d,%d],'width':%lu,'height':%lu,'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
+            "    \"%s\":{\"offset\":[%d,%d],\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
             get_escaped_char(glyph->charcode),
             glyph->offset_x, glyph->offset_y,
             glyph->width, glyph->height,
             glyph->s0, glyph->t0, glyph->s1, glyph->t1
         );
-        print_kerning(file_stream, glyph->kerning);
-        fprintf(file_stream, "},\n");
     }
     fprintf(file_stream, "  }\n");
     fprintf(file_stream, "}\n");
