@@ -1,13 +1,14 @@
 #!/bin/sh
 
-NAME=$1
-FONT_NAME=$2
-RESOLUTION=$3
+FONT_FILE=$1
+RESOLUTION=$2
 
 sleep 1
 mkdir -p build && \
 cd build && \
 cmake .. && \
 make && \
-./compute-distmap ${FONT_NAME} ${NAME} ${RESOLUTION} && \
-python make_png.py ${NAME}
+./compute-distmap ${FONT_FILE} ${RESOLUTION} && \
+python make_png.py ${FONT_FILE} && \
+cp ${FONT_FILE}.py ../fonts && \
+cp ${FONT_FILE}.png ../fonts
