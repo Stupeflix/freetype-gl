@@ -173,13 +173,10 @@ IF (ANT_TWEAK_BAR_FOUND AND (NOT (WIN32 OR WIN64)) )
 ENDIF (ANT_TWEAK_BAR_FOUND AND (NOT (WIN32 OR WIN64)) )  
 
 # Copy font and shaders into build directory for in-place testing
-FILE(GLOB Fonts   "fonts/Vera.ttf"
-                  "fonts/VeraMoBI.ttf"
-                  "fonts/VeraMoBd.ttf"
-                  "fonts/VeraMoIt.ttf"
-                  "fonts/VeraMono.ttf"
-                  "fonts/ObelixPro.ttf")
+FILE(GLOB Fonts   "fonts/*.ttf")
+
 file(COPY ${Fonts}   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/fonts)
+file(COPY "make_png.py" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 FILE(GLOB Data   "data/256colors.txt")
 file(COPY ${Data}   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)

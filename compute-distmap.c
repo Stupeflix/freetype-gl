@@ -99,6 +99,23 @@ create_atlas_file(char const *output_name)
     return 0;
 }
 
+char *
+get_escaped_char(char c)
+{
+    static char str[2];
+    if (c == '\'')
+        return "\\'";
+    if (c == '\\')
+        return "\\\\";
+    if (c == '\n')
+        return "\\n";
+    if (c == '\r')
+        return "\\r";
+    str[0] = c;
+    str[1] = 0;
+    return str;
+}
+
 void
 print_kerning(FILE *file_stream, vector_t *kerning)
 {
@@ -107,12 +124,12 @@ print_kerning(FILE *file_stream, vector_t *kerning)
     for ( i=0;i<vector_size(kerning);++i )
     {
         kerning_t const *k = vector_get( kerning, i );
-        if (k->charcode == '\'')
-            fprintf(file_stream, "{'charcode':'\\'','value':%f},", k->kerning);
-        else if (k->charcode == '\\')
-            fprintf(file_stream, "{'charcode':'\\\\','value':%f},", k->kerning);
-        else
-            fprintf(file_stream, "{'charcode':'%c','value':%f},", k->charcode, k->kerning);
+        fprintf(
+            file_stream,
+            "{'charcode':'%s','value':%f},",
+            get_escaped_char(k->charcode),
+            k->kerning
+        );
     }
     fprintf(file_stream, "]");
 }
@@ -148,34 +165,15 @@ create_python_file(const char *output_name)
         texture_glyph_t const * glyph =
             *(texture_glyph_t **)
             vector_get(font->glyphs, i);
-        if (glyph->charcode == '\'')
-        {
-            fprintf(file_stream,
-                "    '\\'':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
-                glyph->s0, glyph->t0, glyph->s1, glyph->t1
-            );
-            print_kerning(file_stream, glyph->kerning);
-            fprintf(file_stream, "},\n");
-        }
-        else if (glyph->charcode == '\\')
-        {
-            fprintf(file_stream,
-                "    '\\\\':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
-                glyph->s0, glyph->t0, glyph->s1, glyph->t1
-            );
-            print_kerning(file_stream, glyph->kerning);
-            fprintf(file_stream, "},\n");
-        }
-        else if (i != 194)
-        {
-            fprintf(file_stream,
-                "    '%c':{'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
-                glyph->charcode,
-                glyph->s0, glyph->t0, glyph->s1, glyph->t1
-            );
-            print_kerning(file_stream, glyph->kerning);
-            fprintf(file_stream, "},\n");
-        }
+        fprintf(file_stream,
+            "    '%s':{'offset':[%d,%d],'width':%lu,'height':%lu,'s0':%f,'t0':%f,'s1':%f,'t1':%f,'kerning':",
+            get_escaped_char(glyph->charcode),
+            glyph->offset_x, glyph->offset_y,
+            glyph->width, glyph->height,
+            glyph->s0, glyph->t0, glyph->s1, glyph->t1
+        );
+        print_kerning(file_stream, glyph->kerning);
+        fprintf(file_stream, "},\n");
     }
     fprintf(file_stream, "  }\n");
     fprintf(file_stream, "}\n");
