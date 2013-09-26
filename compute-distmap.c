@@ -77,9 +77,9 @@ make_distance_map( unsigned char *img,
 
 // ------------------------------------------------------ create_atlas_file ---
 int
-create_atlas_file(char const *font_file)
+create_atlas_file( char const *font_file )
 {
-    char output_file[512];
+    char output_file[strlen(font_file) + sizeof(".atlas") + 1];
     strcpy(output_file, font_file);
     strcat(output_file, ".atlas");
 
@@ -100,7 +100,7 @@ create_atlas_file(char const *font_file)
 }
 
 char *
-get_escaped_char(char c)
+get_escaped_char( char c )
 {
     static char str[2];
     if (c == '"')
@@ -117,7 +117,7 @@ get_escaped_char(char c)
 }
 
 void
-write_glyph(FILE * file_stream, texture_glyph_t const * glyph)
+write_glyph( FILE * file_stream, texture_glyph_t const * glyph )
 {
     fprintf(file_stream,
         "    \"%s\":{\"offset_x\":%d,\"offset_y\":%d,\"advance_x\":%f,\"advance_y\":%f,\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
@@ -131,9 +131,9 @@ write_glyph(FILE * file_stream, texture_glyph_t const * glyph)
 
 // ----------------------------------------------------- create_python_file ---
 int
-create_json_file(const char *font_file)
+create_json_file( const char *font_file )
 {
-    char output_file[512];
+    char output_file[strlen(font_file) + sizeof(".json") + 1];
     strcpy(output_file, font_file);
     strcat(output_file, ".json");
 
@@ -168,9 +168,9 @@ create_json_file(const char *font_file)
 }
 
 int
-create_python_file(const char *font_file)
+create_python_file( const char *font_file )
 {
-    char output_file[512];
+    char output_file[strlen(font_file) + sizeof(".py") + 1];
     strcpy(output_file, font_file);
     strcat(output_file, ".py");
 
@@ -222,15 +222,16 @@ main( int argc, char **argv )
     const size_t resolution = argc > 2 ? atoi(argv[2]) : 50;
     const wchar_t *cache = L"!\"#$%&'()*+,-./0123456789:;<=>?"
                            L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-                           L"`abcdefghijklmnopqrstuvwxyz{|}~";
+                           L"`abcdefghijklmnopqrstuvwxyz{|}~"
+                           L"éèàêûëù";
 
     printf("\n  Generate \"%s\" distmap with resolution of %lu.\n\n", font_file, resolution);
 
     fprintf( stdout, "    Generate font texture and atlas..." );
     fflush( stdout );
     font = texture_font_new( NULL, font_file, resolution );
-    // texture_font_load_glyphs_with_padding( font, cache, 25 );
-    texture_font_load_with_padding( font, 25 );
+    texture_font_load_glyphs_with_padding( font, cache, 25 );
+    // texture_font_load_with_padding( font, 25 );
     fprintf( stdout, "OK\n");
 
     fprintf( stdout, "    Generate distance map..." );

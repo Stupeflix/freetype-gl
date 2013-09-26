@@ -55,8 +55,19 @@ const struct {
 } FT_Errors[] =
 #include FT_ERRORS_H
 
+static size_t
+_get_next_power_of_two(size_t v)
+{
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    return v + 1;
+}
 
-static wchar_t * _get_all_charcodes()
+static wchar_t *
+_get_all_charcodes()
 {
         wchar_t *cache = (wchar_t *) malloc(65536 * sizeof(wchar_t));
     wchar_t i;
@@ -71,7 +82,8 @@ static wchar_t * _get_all_charcodes()
     return cache;
 }
 
-static int _compute_atlas( texture_font_t * self,
+static int
+_compute_atlas( texture_font_t * self,
                            FT_Face face )
 {
     size_t size = 0;
@@ -84,8 +96,7 @@ static int _compute_atlas( texture_font_t * self,
         if(FT_Get_Char_Index( face, self->cache[i] ))
             size++;
     }
-    size = (1 << (32 - __builtin_clz(sqrt(size) * 50)));
-    // printf("size = %d\n", size);
+    size = _get_next_power_of_two((size * self->size) / 20);
     self->atlas = texture_atlas_new( size, size, 1 );
     return 0;
 }
