@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "freetype-gl.h"
+#include "edtaa3func.h"
 
 // ------------------------------------------------------- global variables ---
 texture_font_t  * font  = 0;

@@ -69,15 +69,16 @@ _get_next_power_of_two(size_t v)
 static wchar_t *
 _get_all_charcodes()
 {
-        wchar_t *cache = (wchar_t *) malloc(65536 * sizeof(wchar_t));
+    wchar_t *cache = (wchar_t *) malloc(65536 * sizeof(wchar_t));
     wchar_t i;
     if (cache == NULL)
     {
         fprintf(stderr, "Error: Cannot allocate unicode cache.\n");
         return 0;
     }
-    for (i = 32; i < 65536; ++i)
+    for (i = 32; i < 65535; ++i) {
         cache[i - 32] = i;
+    }
     cache[i] = 0;
     return cache;
 }

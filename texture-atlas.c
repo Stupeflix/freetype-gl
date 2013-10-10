@@ -315,7 +315,6 @@ texture_atlas_upload( texture_atlas_t * self )
     {
         glGenTextures( 1, &self->id );
     }
-
     glBindTexture( GL_TEXTURE_2D, self->id );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
