@@ -9,6 +9,4 @@ cd build && \
 cmake .. && \
 make && \
 ./compute-distmap ${FONT_FILE} ${RESOLUTION} && \
-python make_png.py ${FONT_FILE} && \
-cp ${FONT_FILE}.py ../fonts && \
-cp ${FONT_FILE}.png ../fonts
+cp ${FONT_FILE}.py ../fonts

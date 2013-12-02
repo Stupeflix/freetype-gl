@@ -187,8 +187,8 @@ create_python_file( const char *font_file )
     fprintf(file_stream, "#!/usr/bin/env python\n");
     fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
     fprintf(file_stream, "data = {\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
+//    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
+//    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
     fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->glyphs->size);
     fprintf(file_stream, "  \"glyphs\": {\n");
     size_t i;
@@ -232,24 +232,28 @@ main( int argc, char **argv )
     fflush( stdout );
     font = texture_font_new( NULL, font_file, resolution );
     texture_font_load_glyphs_with_padding( font, cache, 25 );
-    // texture_font_load_with_padding( font, 25 );
-    fprintf( stdout, "OK\n");
-
-    fprintf( stdout, "    Generate distance map..." );
-    fflush( stdout );
-    map = make_distance_map( font->atlas->data, font->atlas->width, font->atlas->height );
-    memcpy( font->atlas->data, map, font->atlas->width * font->atlas->height * sizeof(unsigned char) );
-    free( map );
-    fprintf( stdout, "OK\n");
-    if ( create_atlas_file(font_file) != 0 )
-        return 1;
+    
     if ( create_python_file(font_file) != 0)
         return 1;
-
-    printf("\n");
-
-    texture_atlas_delete( font->atlas );
-    texture_font_delete( font );
+    
+//    // texture_font_load_with_padding( font, 25 );
+//    fprintf( stdout, "OK\n");
+//
+//    fprintf( stdout, "    Generate distance map..." );
+//    fflush( stdout );
+//    map = make_distance_map( font->atlas->data, font->atlas->width, font->atlas->height );
+//    memcpy( font->atlas->data, map, font->atlas->width * font->atlas->height * sizeof(unsigned char) );
+//    free( map );
+//    fprintf( stdout, "OK\n");
+//    if ( create_atlas_file(font_file) != 0 )
+//        return 1;
+//    if ( create_python_file(font_file) != 0)
+//        return 1;
+//
+//    printf("\n");
+//
+//    texture_atlas_delete( font->atlas );
+//    texture_font_delete( font );
 
     return 0;
 }
