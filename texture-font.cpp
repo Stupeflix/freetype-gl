@@ -42,7 +42,6 @@
 #include <assert.h>
 #include <math.h>
 #include <wchar.h>
-#include "platform.h"
 #include "texture-font.h"
 
 #undef __FTERRORS_H__
@@ -671,10 +670,8 @@ texture_font_get_glyph( texture_font_t * self,
         size_t height = self->atlas->height;
         ivec4 region = texture_atlas_get_region( self->atlas, 5, 5 );
         texture_glyph_t * glyph = texture_glyph_new( );
-        static unsigned char data[4*4*3] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                                            -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                                            -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-                                            -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+        static unsigned char data[4*4*3];
+        memset(data, 0, 4*4*3);
         if ( region.x < 0 )
         {
             fprintf( stderr, "Texture atlas is full (line %d)\n",  __LINE__ );

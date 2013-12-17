@@ -2,7 +2,8 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.5 )
 
 project(distmapgen)
 
-set(CMAKE_CXX_FLAGS "-ggdb3")
+set(CMAKE_CXX "g++")
+set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++0x")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules"
                       "${CMAKE_MODULE_PATH}" )
 
@@ -12,20 +13,27 @@ find_package(OpenGL REQUIRED)
 find_package(Math REQUIRED)
 find_package(FreeType REQUIRED)
 
-file(GLOB HEADERS "*.h")
+file(GLOB_RECURSE HEADERS "src/*.hpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-set( SOURCES
-  texture-atlas.c
-  texture-font.c
-  font-manager.c
-  vector.c       
-  platform.c     
-  edtaa3func.c
+file(GLOB TMPHEADERS "*.h")
+
+set(TMPSOURCES
+  texture-atlas.cpp
+  texture-font.cpp
+  vector.cpp
+  edtaa3func.cpp
   main.cpp)
+
+message(STATUS ${SOURCES})
+
+set(SOURCES ${TMPSOURCES} ${SOURCES})
+set(HEADERS ${TMPHEADERS} ${HEADERS})
 
 include_directories(${OPENGL_INCLUDE_DIRS}
                     ${FREETYPE_INCLUDE_DIRS}
-                    ${CMAKE_CURRENT_SOURCE_DIR})
+                    ${CMAKE_CURRENT_SOURCE_DIR}
+                    src)
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})

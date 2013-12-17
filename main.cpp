@@ -1,4 +1,5 @@
 
+#include <string>
 #include <cstdio>
 #include <cstring>
 #include "texture-font.h"
@@ -105,23 +106,6 @@ create_atlas_file( char const *font_file )
     return 0;
 }
 
-char *
-get_escaped_char( char c )
-{
-    static char str[2];
-    if (c == '"')
-        return "\\\"";
-    if (c == '\\')
-        return "\\\\";
-    if (c == '\n')
-        return "\\n";
-    if (c == '\r')
-        return "\\r";
-    str[0] = c;
-    str[1] = 0;
-    return str;
-}
-
 void
 write_glyph( FILE * file_stream,
              texture_glyph_t const * glyph,
@@ -136,14 +120,6 @@ write_glyph( FILE * file_stream,
         glyph->s0, glyph->t0, glyph->s1, glyph->t1,
         is_last ? "" : ","
     );
-    // fprintf(file_stream,
-    //     "    u\"\\u%04X\":{\"offset_x\":%d,\"offset_y\":%d,\"advance_x\":%f,\"advance_y\":%f,\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
-    //     glyph->charcode,
-    //     glyph->offset_x, glyph->offset_y,
-    //     glyph->advance_x, glyph->advance_y,
-    //     glyph->width, glyph->height,
-    //     glyph->s0, glyph->t0, glyph->s1, glyph->t1
-    // );
 }
 
 // ----------------------------------------------------- create_python_file ---
