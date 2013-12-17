@@ -31,13 +31,12 @@
 # policies, either expressed or implied, of Nicolas P. Rougier.
 # =========================================================================
 PLATFORM		= $(shell uname)
-CC				= gcc
-CFLAGS			= -Wall `freetype-config --cflags` -I/usr/X11/include -g -O0
+CC				= /usr/bin/gcc 
+CFLAGS			= -Wall  -I/usr/X11/include -ggdb
 LIBS			= -lGLEW -lGL -lglut -lGLU -lm \
 	              `freetype-config --libs`
 ifeq ($(PLATFORM), Darwin)
-	LIBS		= -framework OpenGL -framework GLUT -lGLEW -lm \
-	               `freetype-config --libs` -L /usr/X11/lib
+	LIBS		= -framework OpenGL -framework GLUT -lGLEW -lm -L /usr/X11/lib -ggdb
 endif
 
 DEMOS     := $(patsubst %.c,%,$(wildcard demo-*.c))
