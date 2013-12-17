@@ -2,20 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import imp
 import Image
-
+import simplejson as json
+# import codecs
 
 path = sys.argv[1]
 
-with open(path + '.py', 'rb') as fp:
-  meta = imp.load_module(
-    'meta', fp, path,
-    ('.py', 'rb', imp.PY_SOURCE)
-  )
+with open(path + ".json", 'rb') as f:
+  meta = json.load(f)
 
-w = meta.data['atlas_width']
-h = meta.data['atlas_height']
+w = meta['atlas_width']
+h = meta['atlas_height']
 
 print "  Generate \"" + path + ".png\" (" + str(w) + "x" + str(h) + ").\n"
 

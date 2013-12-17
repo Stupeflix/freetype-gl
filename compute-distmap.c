@@ -11,68 +11,73 @@ unsigned char *
 make_distance_map( unsigned char *img,
                    unsigned int width, unsigned int height )
 {
-    short * xdist = (short *)  malloc( width * height * sizeof(short) );
-    short * ydist = (short *)  malloc( width * height * sizeof(short) );
-    double * gx   = (double *) calloc( width * height, sizeof(double) );
-    double * gy      = (double *) calloc( width * height, sizeof(double) );
-    double * data    = (double *) calloc( width * height, sizeof(double) );
-    double * outside = (double *) calloc( width * height, sizeof(double) );
-    double * inside  = (double *) calloc( width * height, sizeof(double) );
-    int i;
+  short *xdist = (short *)malloc(width * height * sizeof(short));
+  short *ydist = (short *)malloc(width * height * sizeof(short));
+  double *gx = (double *)calloc(width * height, sizeof(double));
+  double *gy = (double *)calloc(width * height, sizeof(double));
+  double *data = (double *)calloc(width * height, sizeof(double));
+  double *outside = (double *)calloc(width * height, sizeof(double));
+  double *inside = (double *)calloc(width * height, sizeof(double));
+  size_t i;
 
-    // Convert img into double (data)
-    double img_min = 255, img_max = -255;
-    for( i=0; i<width*height; ++i)
-    {
-        double v = img[i];
-        data[i] = v;
-        if (v > img_max) img_max = v;
-        if (v < img_min) img_min = v;
+  if (!xdist || !ydist || !gx || !gy || !data || !outside || !inside)
+    return NULL;
+
+
+  // Convert img into double (data)
+  double img_min = 255;
+  double img_max = -255;
+  for (i = 0; i < width * height; ++i) {
+    double v = img[i];
+    data[i] = v;
+    if (v > img_max) img_max = v;
+    if (v < img_min) img_min = v;
+  }
+
+  // Rescale image levels between 0 and 1
+  for (i = 0; i < width * height; ++i) {
+    data[i] = (img[i]-img_min)/img_max;
+  }
+
+  // Compute outside = edtaa3(bitmap); % Transform background (0's)
+  computegradient(data, width, height, gx, gy);
+  edtaa3(data, gx, gy, height, width, xdist, ydist, outside);
+  for (i = 0; i < width * height; ++i)
+    if (outside[i] < 0)
+      outside[i] = 0.0;
+
+  // Compute inside = edtaa3(1-bitmap); % Transform foreground (1's)
+  memset(gx, 0, sizeof(double) * width * height);
+  memset(gy, 0, sizeof(double) * width * height);
+  for (i = 0; i < width * height; ++i)
+    data[i] = 1 - data[i];
+  computegradient(data, width, height, gx, gy);
+  edtaa3(data, gx, gy, height, width, xdist, ydist, inside);
+  for (i = 0; i < width * height; ++i) {
+    if (inside[i] < 0)
+      inside[i] = 0.0;
+  }
+
+  // distmap = outside - inside; % Bipolar distance field
+  unsigned char *out = (unsigned char *) malloc(width * height * sizeof(unsigned char));
+  if (out) {
+    for (i = 0; i < width * height; ++i) {
+      outside[i] -= inside[i];
+      outside[i] = 128+outside[i]*16;
+      if (outside[i] < 0) outside[i] = 0;
+      if (outside[i] > 255) outside[i] = 255;
+      out[i] = 255 - (unsigned char) outside[i];
     }
-    // Rescale image levels between 0 and 1
-    for( i=0; i<width*height; ++i)
-    {
-        data[i] = (img[i]-img_min)/img_max;
-    }
+  }
 
-    // Compute outside = edtaa3(bitmap); % Transform background (0's)
-    computegradient( data, width, height, gx, gy);
-    edtaa3(data, gx, gy, height, width, xdist, ydist, outside);
-    for( i=0; i<width*height; ++i)
-        if( outside[i] < 0 )
-            outside[i] = 0.0;
-
-    // Compute inside = edtaa3(1-bitmap); % Transform foreground (1's)
-    memset(gx, 0, sizeof(double)*width*height );
-    memset(gy, 0, sizeof(double)*width*height );
-    for( i=0; i<width*height; ++i)
-        data[i] = 1 - data[i];
-    computegradient( data, width, height, gx, gy);
-    edtaa3(data, gx, gy, height, width, xdist, ydist, inside);
-    for( i=0; i<width*height; ++i)
-        if( inside[i] < 0 )
-            inside[i] = 0.0;
-
-    // distmap = outside - inside; % Bipolar distance field
-    unsigned char *out = (unsigned char *) malloc( width * height * sizeof(unsigned char) );
-    for( i=0; i<width*height; ++i)
-    {
-        outside[i] -= inside[i];
-        outside[i] = 128+outside[i]*16;
-        if( outside[i] < 0 ) outside[i] = 0;
-        if( outside[i] > 255 ) outside[i] = 255;
-        out[i] = 255 - (unsigned char) outside[i];
-        //out[i] = (unsigned char) outside[i];
-    }
-
-    free( xdist );
-    free( ydist );
-    free( gx );
-    free( gy );
-    free( data );
-    free( outside );
-    free( inside );
-    return out;
+  free(xdist);
+  free(ydist);
+  free(gx);
+  free(gy);
+  free(data);
+  free(outside);
+  free(inside);
+  return out;
 }
 
 // ------------------------------------------------------ create_atlas_file ---
@@ -117,16 +122,27 @@ get_escaped_char( char c )
 }
 
 void
-write_glyph( FILE * file_stream, texture_glyph_t const * glyph )
+write_glyph( FILE * file_stream,
+             texture_glyph_t const * glyph,
+             char is_last )
 {
     fprintf(file_stream,
-        "    \"%s\":{\"offset_x\":%d,\"offset_y\":%d,\"advance_x\":%f,\"advance_y\":%f,\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
-        get_escaped_char(glyph->charcode),
+        "    \"%d\":{\"offset_x\":%d,\"offset_y\":%d,\"advance_x\":%f,\"advance_y\":%f,\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f}%s\n",
+        glyph->charcode,
         glyph->offset_x, glyph->offset_y,
         glyph->advance_x, glyph->advance_y,
         glyph->width, glyph->height,
-        glyph->s0, glyph->t0, glyph->s1, glyph->t1
+        glyph->s0, glyph->t0, glyph->s1, glyph->t1,
+        is_last ? "" : ","
     );
+    // fprintf(file_stream,
+    //     "    u\"\\u%04X\":{\"offset_x\":%d,\"offset_y\":%d,\"advance_x\":%f,\"advance_y\":%f,\"width\":%lu,\"height\":%lu,\"s0\":%f,\"t0\":%f,\"s1\":%f,\"t1\":%f},\n",
+    //     glyph->charcode,
+    //     glyph->offset_x, glyph->offset_y,
+    //     glyph->advance_x, glyph->advance_y,
+    //     glyph->width, glyph->height,
+    //     glyph->s0, glyph->t0, glyph->s1, glyph->t1
+    // );
 }
 
 // ----------------------------------------------------- create_python_file ---
@@ -156,7 +172,8 @@ create_json_file( const char *font_file )
     {
         write_glyph(
             file_stream,
-            *(texture_glyph_t **)vector_get(font->glyphs, i)
+            *(texture_glyph_t **)vector_get(font->glyphs, i),
+            i + 1 == font->glyphs->size
         );
     }
     fprintf(file_stream, "  }\n");
@@ -195,7 +212,8 @@ create_python_file( const char *font_file )
     {
         write_glyph(
             file_stream,
-            *(texture_glyph_t **)vector_get(font->glyphs, i)
+            *(texture_glyph_t **)vector_get(font->glyphs, i),
+            i + 1 == font->glyphs->size
         );
     }
     fprintf(file_stream, "  }\n");
@@ -230,8 +248,8 @@ main( int argc, char **argv )
     fprintf( stdout, "    Generate font texture and atlas..." );
     fflush( stdout );
     font = texture_font_new( NULL, font_file, resolution );
-    texture_font_load_glyphs_with_padding( font, cache, 25 );
-    // texture_font_load_with_padding( font, 25 );
+    // texture_font_load_glyphs_with_padding( font, cache, 25 );
+    texture_font_load_with_padding( font, 25 );
     fprintf( stdout, "OK\n");
 
     fprintf( stdout, "    Generate distance map..." );
@@ -242,7 +260,7 @@ main( int argc, char **argv )
     fprintf( stdout, "OK\n");
     if ( create_atlas_file(font_file) != 0 )
         return 1;
-    if ( create_python_file(font_file) != 0)
+    if ( create_json_file(font_file) != 0)
         return 1;
 
     printf("\n");
