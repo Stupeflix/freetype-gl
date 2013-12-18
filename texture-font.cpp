@@ -1,5 +1,4 @@
 
-#include "ft/ft.hpp"
 #include "ft/Error.hpp"
 #include "ft/Library.hpp"
 
@@ -57,11 +56,6 @@ _compute_atlas( TextureFont * self,
     return 0;
 }
 
-int
-texture_font_load_face( const char * filename,
-                        const float size,
-                        FT_Face * face );
-
 TextureFont::TextureFont(texture_atlas_t *atlas,
                          std::string const &path,
                          float size) :
@@ -71,7 +65,7 @@ TextureFont::TextureFont(texture_atlas_t *atlas,
   if (size <= 0)
     throw std::runtime_error("Font size should be positive.");
   _cache = _get_all_charcodes();
-  _glyphs = vector_new( sizeof(ft::Glyph *) );
+  // _glyphs = vector_new( sizeof(ft::Glyph *) );
   _atlas = atlas;
   _height = 0;
   _ascender = 0;
@@ -80,8 +74,7 @@ TextureFont::TextureFont(texture_atlas_t *atlas,
   _kerning = 1;
 
   /* Get font metrics at high resolution */
-  if(!texture_font_load_face(_path.c_str(), _size * 100, &face))
-    throw std::runtime_error("Cannot load font face.");
+  _loadFace(&face, 100);
 
   if (_atlas == NULL)
       _compute_atlas( this, face );
@@ -95,18 +88,27 @@ TextureFont::TextureFont(texture_atlas_t *atlas,
 }
 
 TextureFont::~TextureFont() {
-  ft::Glyph *glyph;
-  for (size_t i = 0; i < vector_size(_glyphs); ++i) {
-    glyph = *(ft::Glyph **) vector_get(_glyphs, i);
+  for (auto glyph : _glyphs)
     delete glyph;
-  }
-  vector_delete(_glyphs);
 }
 
-// ------------------------------------------------- texture_font_load_face ---
-int texture_font_load_face( const char * filename,
-                            const float size,
-                            FT_Face * face ) {
+ft::Glyph *TextureFont::getGlyph(wchar_t charcode) {
+  wchar_t buffer[2] = {0,0};
+
+  /* Check if charcode has been already loaded */
+  for(auto glyph : _glyphs) {
+    if (glyph->charcode == charcode)
+      return glyph;
+  }
+
+  /* Glyph has not been already loaded */
+  buffer[0] = charcode;
+  if (texture_font_load_glyphs(this, buffer) == 0)
+    return _glyphs.back();
+  return NULL;
+}
+
+void TextureFont::_loadFace(FT_Face *face, float k) {
   size_t hres = 64;
   FT_Error error;
   FT_Matrix matrix = { (int)((1.0/hres) * 0x10000L),
@@ -115,70 +117,50 @@ int texture_font_load_face( const char * filename,
                        (int)((1.0)      * 0x10000L) };
 
   /* Load face */
-  error = FT_New_Face(ft::Library::getHandle(), filename, 0, face );
-  if( error )
+  error = FT_New_Face(ft::Library::getHandle(), _path.c_str(), 0, face );
+  if (error)
     throw ft::Error(error);
 
   /* Select charmap */
-  error = FT_Select_Charmap( *face, FT_ENCODING_UNICODE );
-  if( error )
+  error = FT_Select_Charmap(*face, FT_ENCODING_UNICODE);
+  if (error)
     throw ft::Error(error);
 
   /* Set char size */
-  error = FT_Set_Char_Size( *face, (int)(size*64), 0, 72*hres, 72 );
-  if( error )
+  error = FT_Set_Char_Size(*face, (int)(_size*k*64), 0, 72*hres, 72);
+  if (error)
     throw ft::Error(error);
 
   /* Set transform matrix */
   FT_Set_Transform( *face, &matrix, NULL );
-  return 1;
 }
 
+void TextureFont::_computeKerning() {
+  FT_Face face;
+  FT_UInt glyph_index, prev_index;
+  ft::Glyph *glyph, *prev_glyph;
+  FT_Vector kerning;
+  
+  /* Load font */
+  _loadFace(&face);
 
-// ------------------------------------------ texture_font_generate_kerning ---
-void
-texture_font_generate_kerning( TextureFont *self )
-{
-    size_t i, j;
-    FT_Face face;
-    FT_UInt glyph_index, prev_index;
-    ft::Glyph *glyph, *prev_glyph;
-    FT_Vector kerning;
-    
-    assert( self );
-
-    /* Load font */
-    if( !texture_font_load_face(self->_path.c_str(), self->_size, &face ) )
-    {
-        return;
+  /* Compute kernings. */
+  for (size_t i = 1; i < _glyphs.size(); ++i) {
+    glyph = _glyphs[i];
+    glyph_index = FT_Get_Char_Index(face, glyph->charcode);
+    vector_clear(glyph->kerning);
+    for (size_t j = 1; j < _glyphs.size(); ++j) {
+      prev_glyph = _glyphs[j];
+      prev_index = FT_Get_Char_Index(face, prev_glyph->charcode);
+      FT_Get_Kerning(face, prev_index, glyph_index, FT_KERNING_UNFITTED, &kerning);
+      if( kerning.x ) {
+        // hres = 64
+        ft::Kerning k = {prev_glyph->charcode, kerning.x / (float)(64.0f * 64.0f)};
+        vector_push_back(glyph->kerning, &k);
+      }
     }
-
-    /* For each glyph couple combination, check if kerning is necessary */
-    /* Starts at index 1 since 0 is for the special backgroudn glyph */
-    for( i=1; i<self->_glyphs->size; ++i )
-    {
-        glyph = *(ft::Glyph **) vector_get( self->_glyphs, i );
-        glyph_index = FT_Get_Char_Index( face, glyph->charcode );
-        vector_clear( glyph->kerning );
-
-        for( j=1; j<self->_glyphs->size; ++j )
-        {
-            prev_glyph = *(ft::Glyph **) vector_get( self->_glyphs, j );
-            prev_index = FT_Get_Char_Index( face, prev_glyph->charcode );
-            FT_Get_Kerning( face, prev_index, glyph_index, FT_KERNING_UNFITTED, &kerning );
-            // printf("%c(%d)-%c(%d): %ld\n",
-            //       prev_glyph->charcode, prev_glyph->charcode,
-            //       glyph_index, glyph_index, kerning.x);
-            if( kerning.x )
-            {
-                // 64 * 64 because of 26.6 encoding AND the transform matrix used
-                // in texture_font_load_face (hres = 64)
-                ft::Kerning k = {prev_glyph->charcode, kerning.x / (float)(64.0f*64.0f)};
-                vector_push_back( glyph->kerning, &k );
-            }
-        }
-    }
-    FT_Done_Face( face );
+  }
+  FT_Done_Face(face);
 }
 
 // ----------------------------------------------- texture_font_load_glyphs ---
@@ -218,10 +200,7 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
     assert( self );
     assert( charcodes );
 
-    if( !texture_font_load_face(self->_path.c_str(), self->_size, &face ) )
-    {
-        return wcslen(charcodes);
-    }
+    self->_loadFace(&face);
 
     width  = self->_atlas->width;
     height = self->_atlas->height;
@@ -244,7 +223,7 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
         flags |= FT_LOAD_RENDER;
         flags |= FT_LOAD_NO_HINTING | FT_LOAD_NO_AUTOHINT;
         error = FT_Load_Glyph( face, glyph_index, flags );
-        if( error )
+        if (error)
           throw ft::Error(error);
 
 
@@ -291,49 +270,11 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
         glyph->advance_x = slot->advance.x/64.0;
         glyph->advance_y = slot->advance.y/64.0;
 
-        vector_push_back( self->_glyphs, &glyph );
-
+        self->_glyphs.push_back(glyph);
     }
     FT_Done_Face( face );
-    texture_font_generate_kerning( self );
+    self->_computeKerning();
     return missed;
-}
-
-
-// ------------------------------------------------- texture_font_get_glyph ---
-ft::Glyph *
-texture_font_get_glyph( TextureFont * self,
-                        wchar_t charcode )
-{
-    size_t i;
-    wchar_t buffer[2] = {0,0};
-    ft::Glyph *glyph;
-
-    assert( self );
-
-    assert( self );
-    assert( self->filename );
-    assert( self->_atlas );
-
-    /* Check if charcode has been already loaded */
-    for( i=0; i<self->_glyphs->size; ++i )
-    {
-        glyph = *(ft::Glyph **) vector_get( self->_glyphs, i );
-        // If charcode is -1, we don't care about outline type or thickness
-        if( (glyph->charcode == charcode) &&
-            ((charcode == (wchar_t)(-1) )))
-        {
-            return glyph;
-        }
-    }
-
-    /* Glyph has not been already loaded */
-    buffer[0] = charcode;
-    if( texture_font_load_glyphs( self, buffer ) == 0 )
-    {
-        return *(ft::Glyph **) vector_back( self->_glyphs );
-    }
-    return NULL;
 }
 
 

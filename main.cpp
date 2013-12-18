@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 #include "texture-font.h"
 #include "edtaa3func.h"
 
@@ -142,15 +143,13 @@ create_json_file( const char *font_file )
     fprintf(file_stream, "{\n");
     fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
     fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
-    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
+    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs.size());
     fprintf(file_stream, "  \"glyphs\": {\n");
-    size_t i;
-    for( i = 1; i < font->_glyphs->size; ++i )
-    {
+    for (size_t i = 1; i < font->_glyphs.size(); ++i) {
         write_glyph(
             file_stream,
-            *(ft::Glyph **)vector_get(font->_glyphs, i),
-            i + 1 == font->_glyphs->size
+            font->_glyphs[i],
+            i + 1 == font->_glyphs.size()
         );
     }
     fprintf(file_stream, "  }\n");
@@ -164,40 +163,40 @@ create_json_file( const char *font_file )
 int
 create_python_file( const char *font_file )
 {
-    char output_file[strlen(font_file) + sizeof(".py") + 1];
-    strcpy(output_file, font_file);
-    strcat(output_file, ".py");
+    // char output_file[strlen(font_file) + sizeof(".py") + 1];
+    // strcpy(output_file, font_file);
+    // strcat(output_file, ".py");
 
-    fprintf( stdout, "    Create \"%s\"...", output_file);
-    fflush( stdout );
+    // fprintf( stdout, "    Create \"%s\"...", output_file);
+    // fflush( stdout );
 
-    FILE *file_stream = fopen(output_file, "w");
-    if( file_stream == NULL )
-    {
-        fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
-        return 1;
-    }
-    fprintf(file_stream, "#!/usr/bin/env python\n");
-    fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
-    fprintf(file_stream, "data = {\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
-    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
-    fprintf(file_stream, "  \"glyphs\": {\n");
-    size_t i;
-    for( i = 1; i < font->_glyphs->size; ++i )
-    {
-        write_glyph(
-            file_stream,
-            *(ft::Glyph **)vector_get(font->_glyphs, i),
-            i + 1 == font->_glyphs->size
-        );
-    }
-    fprintf(file_stream, "  }\n");
-    fprintf(file_stream, "}\n");
-    if (file_stream != NULL)
-        fclose(file_stream);
-    fprintf(stdout, "OK\n");
+    // FILE *file_stream = fopen(output_file, "w");
+    // if( file_stream == NULL )
+    // {
+    //     fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
+    //     return 1;
+    // }
+    // fprintf(file_stream, "#!/usr/bin/env python\n");
+    // fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
+    // fprintf(file_stream, "data = {\n");
+    // fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
+    // fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
+    // fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
+    // fprintf(file_stream, "  \"glyphs\": {\n");
+    // size_t i;
+    // for( i = 1; i < font->_glyphs->size; ++i )
+    // {
+    //     write_glyph(
+    //         file_stream,
+    //         *(ft::Glyph **)vector_get(font->_glyphs, i),
+    //         i + 1 == font->_glyphs->size
+    //     );
+    // }
+    // fprintf(file_stream, "  }\n");
+    // fprintf(file_stream, "}\n");
+    // if (file_stream != NULL)
+    //     fclose(file_stream);
+    // fprintf(stdout, "OK\n");
     return 0;
 }
 
