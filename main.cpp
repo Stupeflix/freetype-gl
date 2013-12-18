@@ -167,6 +167,11 @@ int main( int argc, char **argv ) {
     return 1;
   }
 
+  wchar_t * font_cache = 
+      L" !\"#$%&'()*+,-./0123456789:;<=>?"
+      L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+      L"`abcdefghijklmnopqrstuvwxyz{|}~";
+
   unsigned char *map;
   const char *font_file = argv[1];
   const size_t resolution = argc > 2 ? atoi(argv[2]) : 50;

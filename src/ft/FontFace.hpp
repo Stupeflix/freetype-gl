@@ -3,6 +3,7 @@
 
 #include <string>
 #include "ft/Library.hpp"
+#include "math/Vector2.hpp"
 
 namespace ft {
 
@@ -63,6 +64,13 @@ class FontFace {
    * Return the index for the given charcode.
    */
   unsigned int getCharIndex(wchar_t charcode) const;
+
+  /**
+   * Return the kerning value between the 2 given char indices.
+   */
+  Vector2i getKerning(unsigned int prev,
+                      unsigned int index,
+                      unsigned int mode = FT_KERNING_UNFITTED) const;
 
   /**
    * Load a glyph from the given index.

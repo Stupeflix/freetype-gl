@@ -121,7 +121,7 @@ void TextureFont::_computeKerning() {
     for (size_t j = 1; j < _glyphs.size(); ++j) {
       prev_glyph = _glyphs[j];
       prev_index = face.getCharIndex(prev_glyph->charcode);
-      FT_Get_Kerning(face.get(), prev_index, glyph_index, FT_KERNING_UNFITTED, &kerning);
+      Vector2i const &kerning = face.getKerning(prev_index, glyph_index);
       if( kerning.x ) {
         // hres = 64
         ft::Kerning k = {prev_glyph->charcode, kerning.x / (float)(64.0f * 64.0f)};
@@ -200,11 +200,8 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
         glyph->t0       = y/(float)height;
         glyph->s1       = (x + glyph->width)/(float)width;
         glyph->t1       = (y + glyph->height)/(float)height;
-
-        // Discard hinting to get advance
-        slot = face.loadGlyph(glyph_index);
-        glyph->advance_x = slot->advance.x/64.0;
-        glyph->advance_y = slot->advance.y/64.0;
+        glyph->advance_x = slot->advance.x / face.getHorizontalResolution();
+        glyph->advance_y = slot->advance.y / face.getHorizontalResolution();
         self->_glyphs.push_back(glyph);
     }
     self->_computeKerning();

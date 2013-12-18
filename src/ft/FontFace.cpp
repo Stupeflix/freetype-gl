@@ -76,5 +76,15 @@ FT_GlyphSlot FontFace::loadGlyph(unsigned int index, int flags) const {
   return _face->glyph;
 }
 
+Vector2i FontFace::getKerning(unsigned int prev,
+                              unsigned int index,
+                              unsigned int mode) const {
+  Vector2i v;
+  FT_Vector tmp;
+  FT_Get_Kerning(_face, prev, index, mode, &tmp);
+  v.x = tmp.x;
+  v.y = tmp.y;
+  return v;
+}
 
 }
