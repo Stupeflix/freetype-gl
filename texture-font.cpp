@@ -40,16 +40,17 @@ _get_all_charcodes()
 static int
 _compute_atlas(TextureFont *self, ft::FontFace const &face)
 {
-    size_t size = 0;
-    size_t i;
+    // size_t size = 0;
+    // size_t i;
 
-    for( i=0; i<wcslen(self->_cache); ++i )
-    {
-        if (self->_cache[i] == '\n')
-            continue;
-        if (face.getCharIndex(self->_cache[i]))
-            size++;
-    }
+    // for( i=0; i<wcslen(self->_cache); ++i )
+    // {
+    //     if (self->_cache[i] == '\n')
+    //         continue;
+    //     if (face.getCharIndex(self->_cache[i]))
+    //         size++;
+    // }
+    size_t size = self->_chars.size();
     size = _get_next_power_of_two((size * self->_size) / 20);
     self->_atlas = new core::TextureAtlas(size, size);
     return 0;
@@ -66,6 +67,7 @@ TextureFont::TextureFont(core::TextureAtlas *atlas,
   /** Load high resolution font face. */
   ft::FontFace face(path, size * 100);
 
+  _chars = face.getCharacters();
   _cache = _get_all_charcodes();
   // _glyphs = vector_new( sizeof(ft::Glyph *) );
   _atlas = atlas;
@@ -153,7 +155,7 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
                           const wchar_t * charcodes,
                           size_t padding )
 {
-    size_t x, y, width, height, w, h;
+    size_t x, y, w, h;
     FT_Error error;
     FT_Glyph ft_glyph;
     FT_GlyphSlot slot;
@@ -166,12 +168,12 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
 
     ft::FontFace face(self->_path, self->_size);
 
-    width  = self->_atlas->getWidth();
-    height = self->_atlas->getHeight();
+    size_t width  = self->_atlas->getWidth();
+    size_t height = self->_atlas->getHeight();
 
     /* Load each glyph */
-    for (std::size_t i = 0; i < wcslen(charcodes); ++i) {
-        glyph_index = face.getCharIndex(charcodes[i]);
+    for (std::size_t i = 0; i < self->_chars.size(); ++i) {
+        glyph_index = face.getCharIndex(self->_chars[i]);
         if (glyph_index == 0) // skip
             continue;
 
@@ -191,7 +193,7 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
         self->_atlas->setRegion(x, y, w, h, ft_bitmap.buffer, ft_bitmap.pitch);
 
         glyph = new ft::Glyph;
-        glyph->charcode = charcodes[i];
+        glyph->charcode = self->_chars[i];
         glyph->width    = w;
         glyph->height   = h;
         glyph->offset_x = slot->bitmap_left;

@@ -1,4 +1,6 @@
 
+#include <iostream>
+#include <limits>
 #include "ft/FontFace.hpp"
 
 namespace ft {
@@ -85,6 +87,19 @@ Vector2i FontFace::getKerning(unsigned int prev,
   v.x = tmp.x;
   v.y = tmp.y;
   return v;
+}
+
+std::wstring FontFace::getCharacters() const {
+  std::wstring chars;
+  wchar_t i = 0;
+  wchar_t end = 65536;
+  // wchar_t end = std::numeric_limits<wchar_t>::max();
+  while (i < end) {
+    if (getCharIndex(i) != 0)
+      chars += i;
+    ++i;
+  }
+  return chars;
 }
 
 }

@@ -60,6 +60,7 @@ class TextureFont {
 
   /** Cache which contains all chars stored into this texture font. */
   wchar_t *_cache;
+  std::wstring _chars;
 
   /** Font size used. */
   float _size;
