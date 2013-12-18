@@ -2,8 +2,6 @@
 #pragma once
 
 #include <vector>
-#include "ft/ft.hpp"
-#include FT_GLYPH_H
 #include "ft/Glyph.hpp"
 #include "core/TextureAtlas.hpp"
 
@@ -17,7 +15,7 @@ class TextureFont {
   /**
    * Create a font from a filename and the font size.
    */
-  explicit TextureFont(core::TextureAtlas *atlas,
+  explicit TextureFont(core::TextureAtlas &atlas,
                        std::string const &path,
                        float size);
 
@@ -48,42 +46,15 @@ class TextureFont {
    */
   void _computeKerning();
 
-  /** Generated glyphs from this font. */
   std::vector<ft::Glyph *> _glyphs;
-
-  /** Generated atlas from this font */
-  core::TextureAtlas *_atlas;
-
-  /** Path to the font file */
+  core::TextureAtlas &_atlas;
   std::string _path;
-  
-  /** Path to the font file */
-  char *filename;
-
-  /** Cache which contains all chars stored into this texture font. */
-  std::wstring _chars;
-
+  std::wstring _cache;
   size_t _padding;
-
-  /** Font size used. */
   float _size;
-  
-  /** Whether to use kerning if available. */
-  int _kerning;
-
-  /** Default line height used. */
   float _height;
-
-  /**
-   * Representation of the space between the top of one letter and
-   * the bottom of the other.
-   */
   float _linegap;
-
-  /** Distance between the baseline and the top of the highest char. */
   float _ascender;
-
-  /** Distance between the baseline and the bottom of the lowest char. */
   float _descender;
 };
 

@@ -9,9 +9,10 @@
 #include <wchar.h>
 #include "texture-font.h"
 
-TextureFont::TextureFont(core::TextureAtlas *atlas,
+TextureFont::TextureFont(core::TextureAtlas &atlas,
                          std::string const &path,
                          float size) :
+  _atlas(atlas),
   _path(path),
   _size(size) {
   if (size <= 0)
@@ -19,19 +20,12 @@ TextureFont::TextureFont(core::TextureAtlas *atlas,
 
   /** Load high resolution font face. */
   ft::FontFace face(path, size * 100);
-
-  _chars = face.getCharacters();
-  _atlas = atlas;
+  _cache = face.getCharacters();
   _height = 0;
   _padding = 0;
   _ascender = 0;
   _descender = 0;
   _size = size;
-  _kerning = 1;
-
-  if (_atlas == NULL)
-    _atlas = new core::TextureAtlas(1024, 1024);
-
   _ascender = face.getAscender() / 100.0;
   _descender = face.getDescender() / 100.0;
   _height = face.getHeight() / 100.0;
@@ -74,56 +68,40 @@ void TextureFont::_computeKerning() {
 }
 
 void TextureFont::generate() {
-    size_t x, y, w, h;
-    FT_Error error;
-    FT_Glyph ft_glyph;
-    FT_GlyphSlot slot;
-    FT_Bitmap ft_bitmap;
-
-    unsigned int glyph_index;
-    ft::Glyph *glyph;
-    Vector4i region;
-    size_t missed = 0;
-
     ft::FontFace face(_path, _size);
-
-    size_t width  = _atlas->getWidth();
-    size_t height = _atlas->getHeight();
+    size_t x = 0;
+    size_t y = 0;
 
     /* Load each glyph */
-    for (std::size_t i = 0; i < _chars.size(); ++i) {
-        glyph_index = face.getCharIndex(_chars[i]);
+    for (std::size_t i = 0; i < _cache.size(); ++i) {
+        std::size_t glyph_index = face.getCharIndex(_cache[i]);
         if (glyph_index == 0) // skip
             continue;
 
-        slot            = face.loadGlyph(glyph_index);
-        ft_bitmap       = slot->bitmap;
+        FT_GlyphSlot slot = face.loadGlyph(glyph_index);
+        std::size_t w = slot->bitmap.width;
+        std::size_t h = slot->bitmap.rows;
 
-        w = slot->bitmap.width;
-        h = slot->bitmap.rows;
-        region = _atlas->getRegion(w + _padding, h + _padding);
-        if (region.x < 0) {
-          missed++;
-          fprintf( stderr, "Texture atlas is full (line %d) (size %lu)\n", __LINE__, i );
-          break;
-        }
-        x = region.x + (_padding >> 1);
-        y = region.y + (_padding >> 1);
-        _atlas->setRegion(x, y, w, h, ft_bitmap.buffer, ft_bitmap.pitch);
-
-        glyph = new ft::Glyph;
-        glyph->charcode = _chars[i];
+        ft::Glyph *glyph = new ft::Glyph;
+        glyph->charcode = _cache[i];
         glyph->width    = w;
         glyph->height   = h;
         glyph->offset_x = slot->bitmap_left;
         glyph->offset_y = slot->bitmap_top;
-        glyph->s0       = x/(float)width;
-        glyph->t0       = y/(float)height;
-        glyph->s1       = (x + glyph->width)/(float)width;
-        glyph->t1       = (y + glyph->height)/(float)height;
+        glyph->s0       = x/(float)_atlas.getWidth();
+        glyph->t0       = y/(float)_atlas.getHeight();
+        glyph->s1       = (x + glyph->width)/(float)_atlas.getWidth();
+        glyph->t1       = (y + glyph->height)/(float)_atlas.getHeight();
         glyph->advance_x = slot->advance.x / face.getHorizontalResolution();
         glyph->advance_y = slot->advance.y / face.getHorizontalResolution();
         _glyphs.push_back(glyph);
+
+        Rect const &region = _atlas.getRegion(w + _padding, h + _padding);
+        if (region.x < 0)
+          throw std::out_of_range("Atlas is full.");
+        x = region.x + (_padding >> 1);
+        y = region.y + (_padding >> 1);
+        _atlas.setRegion(x, y, w, h, slot->bitmap.buffer, slot->bitmap.pitch);
     }
     _computeKerning();
 }

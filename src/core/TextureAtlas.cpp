@@ -2,7 +2,6 @@
 #include <cstring>
 #include <climits>
 #include <stdexcept>
-#include "ft/gl.hpp"
 #include "core/TextureAtlas.hpp"
 
 namespace core {
@@ -11,17 +10,14 @@ TextureAtlas::TextureAtlas(const size_t width, const size_t height) :
   _width(width),
   _height(height),
   _used(0),
-  _id(0),
   _data(new unsigned char[width*height]) {
-  Vector3i node = {1,1,width-2};
+  Vector3i node = {1, 1, static_cast<int>(width) - 2};
   _nodes.push_back(node);
 }
 
 TextureAtlas::~TextureAtlas() {
   if (_data)
     delete _data;
-  if (_id)
-    glDeleteTextures(1, &_id);
 }
 
 size_t TextureAtlas::getWidth() const {
@@ -34,18 +30,6 @@ size_t TextureAtlas::getHeight() const {
 
 unsigned char *TextureAtlas::getData() const {
   return _data;
-}
-
-void TextureAtlas::bind() {
-  if (_id == 0)
-    glGenTextures(1, &_id );
-  glBindTexture(GL_TEXTURE_2D, _id );
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, _width, _height,
-                0, GL_ALPHA, GL_UNSIGNED_BYTE, _data);
 }
 
 void TextureAtlas::clear() {
@@ -76,11 +60,11 @@ void TextureAtlas::setRegion(const size_t x,
     std::memcpy(_data + ((y + i) * _width + x), data + (i*stride), width);
 }
 
-Vector4i TextureAtlas::getRegion(const size_t width,
+Vector4s TextureAtlas::getRegion(const size_t width,
                               const size_t height) {
 
   /* Find best index */
-  Vector4i region = {{0,0,width,height}};
+  Vector4s region = {{0,0,width,height}};
   int best_index = _findBestIndex(region, width, height);
   if (best_index == -1)
     return region;
@@ -115,7 +99,7 @@ Vector4i TextureAtlas::getRegion(const size_t width,
   return region;
 }
 
-int TextureAtlas::_findBestIndex(Vector4i &region,
+int TextureAtlas::_findBestIndex(Vector4s &region,
                                  size_t width,
                                  size_t height) {
   Vector3i node;

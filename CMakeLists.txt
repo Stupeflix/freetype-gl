@@ -9,7 +9,6 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules"
 
 
 # Find required libraries.
-find_package(OpenGL REQUIRED)
 find_package(Math REQUIRED)
 find_package(FreeType REQUIRED)
 
@@ -27,15 +26,14 @@ set(TMPSOURCES
 set(SOURCES ${TMPSOURCES} ${SOURCES})
 set(HEADERS ${TMPHEADERS} ${HEADERS})
 
-include_directories(${OPENGL_INCLUDE_DIRS}
-                    ${FREETYPE_INCLUDE_DIRS}
+include_directories(${FREETYPE_INCLUDE_DIRS}
                     ${CMAKE_CURRENT_SOURCE_DIR}
                     src)
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${MATH_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME})
 
 # Copy font and shaders into build directory for in-place testing
 file(GLOB FONTS "fonts/*.ttf")

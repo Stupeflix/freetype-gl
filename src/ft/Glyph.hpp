@@ -2,7 +2,9 @@
 #pragma once
 
 #include <vector>
+#include "ft/ft.hpp"
 #include "ft/Kerning.hpp"
+#include FT_GLYPH_H
 
 namespace ft {
 
@@ -10,8 +12,8 @@ namespace ft {
  * @struct Glyph
  * A structure that describe glyph data.
  */
-struct Glyph {
-
+class Glyph {
+ public:
   /**
    * Create a glyph.
    */
@@ -31,9 +33,6 @@ struct Glyph {
 
   /** Glyph's charcode. */
   wchar_t charcode;
-
-  /** Glyph's id (for OpenGL). */
-  unsigned int id;
 
   /** Glyph's width in pixels. */
   std::size_t width;

@@ -4,7 +4,6 @@
 namespace ft {
 
 Glyph::Glyph() :
-  id(0),
   width(0), height(0),
   offset_x(0), offset_y(0),
   advance_x(0), advance_y(0),

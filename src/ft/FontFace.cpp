@@ -47,10 +47,6 @@ std::size_t FontFace::getHorizontalResolution() const {
   return _hres;
 }
 
-FT_Face FontFace::get() const {
-  return _face;
-}
-
 float FontFace::getAscender() const {
   return _face->size->metrics.ascender >> 6;
 }
@@ -75,6 +71,10 @@ FT_GlyphSlot FontFace::loadGlyph(unsigned int index, int flags) const {
   FT_Error error = FT_Load_Glyph(_face, index, flags);
   if (error)
     throw ft::Error(error);
+
+  ft::Glyph glyph;
+
+
   return _face->glyph;
 }
 

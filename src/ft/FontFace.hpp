@@ -3,6 +3,7 @@
 
 #include <string>
 #include "ft/Library.hpp"
+#include "ft/Glyph.hpp"
 #include "math/Vector2.hpp"
 
 namespace ft {
@@ -34,11 +35,6 @@ class FontFace {
    * Return the horizontal resolution.
    */
   std::size_t getHorizontalResolution() const;
-
-  /**
-   * Return the freetype face pointer. 
-   */
-  FT_Face get() const;
 
   /**
    * Return ascender metric.

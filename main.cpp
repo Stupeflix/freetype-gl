@@ -7,6 +7,7 @@
 #include "edtaa3func.h"
 
 // ------------------------------------------------------- global variables ---
+core::TextureAtlas atlas(1024, 1024);
 TextureFont  * font  = 0;
 
 // ------------------------------------------------------ make_distance_map ---
@@ -100,7 +101,7 @@ create_atlas_file( char const *font_file )
         fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
         return 1;
     }
-    fwrite( font->_atlas->getData(), font->_atlas->getWidth() * font->_atlas->getHeight(), sizeof(unsigned char), file_stream );
+    fwrite( atlas.getData(), atlas.getWidth() * atlas.getHeight(), sizeof(unsigned char), file_stream );
     if( file_stream != NULL )
         fclose(file_stream);
     fprintf(stdout, "OK\n");
@@ -141,8 +142,8 @@ create_json_file( const char *font_file )
         return 1;
     }
     fprintf(file_stream, "{\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->getWidth());
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->getHeight());
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", atlas.getWidth());
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", atlas.getHeight());
     fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs.size());
     fprintf(file_stream, "  \"glyphs\": {\n");
     for (size_t i = 1; i < font->_glyphs.size(); ++i) {
@@ -183,7 +184,7 @@ int main( int argc, char **argv ) {
   std::cout << std::endl << "    Generate font texture and atlas..."
             << std::flush;
 
-  font = new TextureFont( NULL, font_file, resolution );
+  font = new TextureFont(atlas, font_file, resolution);
   font->setPadding(25);
   font->generate();
 
@@ -191,8 +192,8 @@ int main( int argc, char **argv ) {
 
   std::cout << "    Generate distance map..." << std::flush;
 
-  map = make_distance_map( font->_atlas->getData(), font->_atlas->getWidth(), font->_atlas->getHeight() );
-  memcpy( font->_atlas->getData(), map, font->_atlas->getWidth() * font->_atlas->getHeight() * sizeof(unsigned char) );
+  map = make_distance_map( atlas.getData(), atlas.getWidth(), atlas.getHeight() );
+  memcpy( atlas.getData(), map, atlas.getWidth() * atlas.getHeight() * sizeof(unsigned char) );
   free( map );
   std::cout << "OK" << std::endl;
 
@@ -203,7 +204,6 @@ int main( int argc, char **argv ) {
 
   std::cout << std::endl;
 
-  delete font->_atlas;
   delete font;
 
   return 0;
