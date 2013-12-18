@@ -108,7 +108,7 @@ create_atlas_file( char const *font_file )
 
 void
 write_glyph( FILE * file_stream,
-             Glyph const * glyph,
+             ft::Glyph const * glyph,
              char is_last )
 {
     fprintf(file_stream,
@@ -149,7 +149,7 @@ create_json_file( const char *font_file )
     {
         write_glyph(
             file_stream,
-            *(Glyph **)vector_get(font->_glyphs, i),
+            *(ft::Glyph **)vector_get(font->_glyphs, i),
             i + 1 == font->_glyphs->size
         );
     }
@@ -189,7 +189,7 @@ create_python_file( const char *font_file )
     {
         write_glyph(
             file_stream,
-            *(Glyph **)vector_get(font->_glyphs, i),
+            *(ft::Glyph **)vector_get(font->_glyphs, i),
             i + 1 == font->_glyphs->size
         );
     }
@@ -215,17 +215,12 @@ main( int argc, char **argv )
     unsigned char *map;
     const char *font_file = argv[1];
     const size_t resolution = argc > 2 ? atoi(argv[2]) : 50;
-    const wchar_t *cache = L"!\"#$%&'()*+,-./0123456789:;<=>?"
-                           L"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-                           L"`abcdefghijklmnopqrstuvwxyz{|}~"
-                           L"éèàêûëù";
 
     printf("\n  Generate \"%s\" distmap with resolution of %lu.\n\n", font_file, resolution);
 
     fprintf( stdout, "    Generate font texture and atlas..." );
     fflush( stdout );
-    font = texture_font_new( NULL, font_file, resolution );
-    // texture_font_load_glyphs_with_padding( font, cache, 25 );
+    font = new TextureFont( NULL, font_file, resolution );
     texture_font_load_with_padding( font, 25 );
     fprintf( stdout, "OK\n");
 
@@ -243,7 +238,7 @@ main( int argc, char **argv )
     printf("\n");
 
     texture_atlas_delete( font->_atlas );
-    texture_font_delete( font );
+    delete font;
 
     return 0;
 }

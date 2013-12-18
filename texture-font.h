@@ -38,62 +38,8 @@
 #include <vector>
 
 #include "vector.h"
+#include "ft/Glyph.hpp"
 #include "texture-atlas.h"
-
-/**
- * @struct Kerning
- * A structure that hold a kerning value relatively to the left
- * charcode.
- *
- * This structure cannot be used alone since the (necessary) right charcode is
- * implicitely held by the owner of this structure.
- */
-struct Kerning {
-  wchar_t charcode; /** Left character code in the pair. */
-  float kerning; /** Kerning value (in fractional pixels). */
-};
-
-/**
- * @struct Glyph
- * A structure that describe glyph data.
- */
-struct Glyph {
-
-  /** Glyph's charcode. */
-  wchar_t charcode;
-
-  /** Glyph's id (for OpenGL). */
-  unsigned int id;
-
-  /** Glyph's width in pixels. */
-  size_t width;
-
-  /** Glyph's height in pixels. */
-  size_t height;
-
-  /** Glyph's left offset in pixels. */
-  int offset_x;
-
-  /** Glyph's top offset in pixels. */
-  int offset_y;
-
-  /** Glyph's advancement relative to the previous char. */
-  float advance_x;
-
-  /** Glyph's advancement relative to the previous line. */
-  float advance_y;
-
-  /** Normalized texture coordinates. */
-  float s0, t0, s1, t1;
-
-  /**
-   * A vector of kerning pairs relative to this glyph.
-   */
-  vector_t *kerning;
-
-};
-
-
 
 /**
  * This class can generate a texture altas from a list of
@@ -151,8 +97,6 @@ class TextureFont {
     float _descender;
 };
 
-
-
 /**
  * This function creates a new texture font from given filename and size.  The
  * texture atlas is used to store glyph on demand. Note the depth of the atlas
@@ -194,7 +138,7 @@ class TextureFont {
  *         enough
  *
  */
-  Glyph *
+  ft::Glyph *
   texture_font_get_glyph( TextureFont * self,
                           wchar_t charcode );
 
@@ -237,29 +181,6 @@ class TextureFont {
 size_t
 texture_font_load_with_padding( TextureFont * self,
                                 size_t padding );
-
-/**
- * Get the kerning between two horizontal glyphs.
- *
- * @param self      a valid texture glyph
- * @param charcode  codepoint of the peceding glyph
- * 
- * @return x kerning value
- */
-float 
-texture_glyph_get_kerning( const Glyph * self,
-                           const wchar_t charcode );
-
-
-/**
- * Creates a new empty glyph
- *
- * @return a new empty glyph (not valid)
- */
-Glyph *
-texture_glyph_new( void );
-
-/** @} */
 
 
 #endif /* __TEXTURE_FONT_H__ */

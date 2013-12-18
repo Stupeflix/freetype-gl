@@ -3,7 +3,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "core/Error.hpp"
+#include "ft/Error.hpp"
 
 namespace ft {
 
