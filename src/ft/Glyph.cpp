@@ -8,19 +8,15 @@ Glyph::Glyph() :
   width(0), height(0),
   offset_x(0), offset_y(0),
   advance_x(0), advance_y(0),
-  s0(0), t0(0), s1(0), t1(0),
-  kerning(vector_new(sizeof(Kerning))) {
+  s0(0), t0(0), s1(0), t1(0) {
 }
 
-Glyph::~Glyph() {
-  vector_delete(kerning);
-}
+Glyph::~Glyph() {}
 
 float Glyph::getKerning(const wchar_t charcode) const {
-  for (size_t i = 0; i < vector_size(kerning); ++i) {
-    Kerning *k = (Kerning *)vector_get(kerning, i);
-    if (k->charcode == charcode)
-      return k->kerning;
+  for (auto &k : kerning) {
+    if (k.charcode == charcode)
+      return k.kerning;
   }
   return 0;
 }

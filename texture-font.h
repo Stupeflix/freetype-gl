@@ -1,11 +1,8 @@
 
 #pragma once
 
-#include <stdlib.h>
 #include <vector>
 #include "ft/ft.hpp"
-
-#include "vector.h"
 #include "ft/Glyph.hpp"
 #include "texture-atlas.h"
 

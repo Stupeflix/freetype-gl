@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "vector.h"
+#include <vector>
 #include "ft/Kerning.hpp"
 
 namespace ft {
@@ -36,10 +36,10 @@ struct Glyph {
   unsigned int id;
 
   /** Glyph's width in pixels. */
-  size_t width;
+  std::size_t width;
 
   /** Glyph's height in pixels. */
-  size_t height;
+  std::size_t height;
 
   /** Glyph's left offset in pixels. */
   int offset_x;
@@ -59,7 +59,7 @@ struct Glyph {
   /**
    * A vector of kerning pairs relative to this glyph.
    */
-  vector_t *kerning;
+  std::vector<Kerning> kerning;
 };
 
 }  // namespace ft

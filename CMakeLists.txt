@@ -25,8 +25,6 @@ set(TMPSOURCES
   edtaa3func.cpp
   main.cpp)
 
-message(STATUS ${SOURCES})
-
 set(SOURCES ${TMPSOURCES} ${SOURCES})
 set(HEADERS ${TMPHEADERS} ${HEADERS})
 
