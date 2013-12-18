@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include "texture-font.h"
-#include "edtaa3func.h"
+#include "core/TextureFont.hpp"
+#include "vendors/edtaa3func.hpp"
 
 // ------------------------------------------------------- global variables ---
 core::TextureAtlas atlas(1024, 1024);

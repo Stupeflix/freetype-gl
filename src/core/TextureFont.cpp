@@ -1,13 +1,12 @@
 
+#include <iostream>
+#include <stdexcept>
+#include <cmath>
+#include <wchar.h>
 #include "ft/Error.hpp"
 #include "ft/Library.hpp"
 #include "ft/FontFace.hpp"
-
-#include <iostream>
-#include <stdexcept>
-#include <math.h>
-#include <wchar.h>
-#include "texture-font.h"
+#include "core/TextureFont.hpp"
 
 TextureFont::TextureFont(core::TextureAtlas &atlas,
                          std::string const &path,

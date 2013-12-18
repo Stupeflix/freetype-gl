@@ -15,17 +15,6 @@ find_package(FreeType REQUIRED)
 file(GLOB_RECURSE HEADERS "src/*.hpp")
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-file(GLOB TMPHEADERS "*.h")
-
-set(TMPSOURCES
-  texture-font.cpp
-  vector.cpp
-  edtaa3func.cpp
-  main.cpp)
-
-set(SOURCES ${TMPSOURCES} ${SOURCES})
-set(HEADERS ${TMPHEADERS} ${HEADERS})
-
 include_directories(${FREETYPE_INCLUDE_DIRS}
                     ${CMAKE_CURRENT_SOURCE_DIR}
                     src)
@@ -33,7 +22,6 @@ include_directories(${FREETYPE_INCLUDE_DIRS}
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${MATH_LIBRARIES})
-target_link_libraries(${PROJECT_NAME})
 
 # Copy font and shaders into build directory for in-place testing
 file(GLOB FONTS "fonts/*.ttf")
