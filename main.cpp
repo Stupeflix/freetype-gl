@@ -100,7 +100,7 @@ create_atlas_file( char const *font_file )
         fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
         return 1;
     }
-    fwrite( font->_atlas->data, font->_atlas->width * font->_atlas->height, sizeof(unsigned char), file_stream );
+    fwrite( font->_atlas->getData(), font->_atlas->getWidth() * font->_atlas->getHeight(), sizeof(unsigned char), file_stream );
     if( file_stream != NULL )
         fclose(file_stream);
     fprintf(stdout, "OK\n");
@@ -141,8 +141,8 @@ create_json_file( const char *font_file )
         return 1;
     }
     fprintf(file_stream, "{\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->getWidth());
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->getHeight());
     fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs.size());
     fprintf(file_stream, "  \"glyphs\": {\n");
     for (size_t i = 1; i < font->_glyphs.size(); ++i) {
@@ -160,84 +160,45 @@ create_json_file( const char *font_file )
     return 0;
 }
 
-int
-create_python_file( const char *font_file )
-{
-    // char output_file[strlen(font_file) + sizeof(".py") + 1];
-    // strcpy(output_file, font_file);
-    // strcat(output_file, ".py");
+int main( int argc, char **argv ) {
+  if (argc < 2) {
+    std::cout << "Usage: " << argv[0]
+              << " FONT_FILE [RESOLUTION=40]" << std::endl;
+    return 1;
+  }
 
-    // fprintf( stdout, "    Create \"%s\"...", output_file);
-    // fflush( stdout );
+  unsigned char *map;
+  const char *font_file = argv[1];
+  const size_t resolution = argc > 2 ? atoi(argv[2]) : 50;
 
-    // FILE *file_stream = fopen(output_file, "w");
-    // if( file_stream == NULL )
-    // {
-    //     fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
-    //     return 1;
-    // }
-    // fprintf(file_stream, "#!/usr/bin/env python\n");
-    // fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
-    // fprintf(file_stream, "data = {\n");
-    // fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
-    // fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
-    // fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
-    // fprintf(file_stream, "  \"glyphs\": {\n");
-    // size_t i;
-    // for( i = 1; i < font->_glyphs->size; ++i )
-    // {
-    //     write_glyph(
-    //         file_stream,
-    //         *(ft::Glyph **)vector_get(font->_glyphs, i),
-    //         i + 1 == font->_glyphs->size
-    //     );
-    // }
-    // fprintf(file_stream, "  }\n");
-    // fprintf(file_stream, "}\n");
-    // if (file_stream != NULL)
-    //     fclose(file_stream);
-    // fprintf(stdout, "OK\n");
-    return 0;
-}
+  std::cout << std::endl << "  Generate \""
+            << font_file << "\" distmap with resolution of "
+            << resolution << "." << std::endl << std::endl;
 
-// ------------------------------------------------------------------- main ---
-int
-main( int argc, char **argv )
-{
+  std::cout << std::endl << "    Generate font texture and atlas..."
+            << std::flush;
 
-    if (argc < 2)
-    {
-        printf("Usage: %s FONT_FILE [RESOLUTION=40]\n", argv[0]);
-        return 1;
-    }
+  font = new TextureFont( NULL, font_file, resolution );
+  texture_font_load_with_padding( font, 25 );
 
-    unsigned char *map;
-    const char *font_file = argv[1];
-    const size_t resolution = argc > 2 ? atoi(argv[2]) : 50;
+  std::cout << "OK" << std::endl;
 
-    printf("\n  Generate \"%s\" distmap with resolution of %lu.\n\n", font_file, resolution);
+  std::cout << "    Generate distance map..." << std::flush;
 
-    fprintf( stdout, "    Generate font texture and atlas..." );
-    fflush( stdout );
-    font = new TextureFont( NULL, font_file, resolution );
-    texture_font_load_with_padding( font, 25 );
-    fprintf( stdout, "OK\n");
+  map = make_distance_map( font->_atlas->getData(), font->_atlas->getWidth(), font->_atlas->getHeight() );
+  memcpy( font->_atlas->getData(), map, font->_atlas->getWidth() * font->_atlas->getHeight() * sizeof(unsigned char) );
+  free( map );
+  std::cout << "OK" << std::endl;
 
-    fprintf( stdout, "    Generate distance map..." );
-    fflush( stdout );
-    map = make_distance_map( font->_atlas->data, font->_atlas->width, font->_atlas->height );
-    memcpy( font->_atlas->data, map, font->_atlas->width * font->_atlas->height * sizeof(unsigned char) );
-    free( map );
-    fprintf( stdout, "OK\n");
-    if ( create_atlas_file(font_file) != 0 )
-        return 1;
-    if ( create_json_file(font_file) != 0)
-        return 1;
+  if (create_atlas_file(font_file) != 0)
+      return 1;
+  if (create_json_file(font_file) != 0)
+      return 1;
 
-    printf("\n");
+  std::cout << std::endl;
 
-    texture_atlas_delete( font->_atlas );
-    delete font;
+  delete font->_atlas;
+  delete font;
 
-    return 0;
+  return 0;
 }

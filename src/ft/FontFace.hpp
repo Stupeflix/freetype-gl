@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <string>
 #include "ft/Library.hpp"
 
 namespace ft {
@@ -54,6 +55,11 @@ class FontFace {
   float getHeight() const;
 
   /**
+   * Return linegap metric.
+   */
+  float getLinegap() const;
+
+  /**
    * Return the index for the given charcode.
    */
   unsigned int getCharIndex(wchar_t charcode) const;
@@ -63,6 +69,11 @@ class FontFace {
    */
   FT_GlyphSlot loadGlyph(unsigned int index,
                          int flags = FT_LOAD_RENDER) const;
+
+  /**
+   * Return all characters presents into this font.
+   */
+  std::wstring getCharacters() const;
 
  private:
   FT_Face _face;

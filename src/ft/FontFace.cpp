@@ -61,6 +61,10 @@ float FontFace::getHeight() const {
   return _face->size->metrics.height >> 6;
 }
 
+float FontFace::getLinegap() const {
+  return getHeight() - getAscender() + getDescender();
+}
+
 unsigned int FontFace::getCharIndex(wchar_t charcode) const {
   return FT_Get_Char_Index(_face, charcode);
 }

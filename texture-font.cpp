@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <assert.h>
 #include <math.h>
 #include <wchar.h>
 #include "texture-font.h"
@@ -52,11 +51,11 @@ _compute_atlas(TextureFont *self, ft::FontFace const &face)
             size++;
     }
     size = _get_next_power_of_two((size * self->_size) / 20);
-    self->_atlas = texture_atlas_new( size, size, 1 );
+    self->_atlas = new core::TextureAtlas(size, size);
     return 0;
 }
 
-TextureFont::TextureFont(texture_atlas_t *atlas,
+TextureFont::TextureFont(core::TextureAtlas *atlas,
                          std::string const &path,
                          float size) :
   _path(path),
@@ -77,12 +76,12 @@ TextureFont::TextureFont(texture_atlas_t *atlas,
   _kerning = 1;
 
   if (_atlas == NULL)
-      _compute_atlas(this, face);
+    _compute_atlas(this, face);
 
   _ascender = face.getAscender() / 100.0;
   _descender = face.getDescender() / 100.0;
   _height = face.getHeight() / 100.0;
-  _linegap = _height - _ascender + _descender;
+  _linegap = face.getLinegap() / 100.0;
 }
 
 TextureFont::~TextureFont() {
@@ -154,7 +153,7 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
                           const wchar_t * charcodes,
                           size_t padding )
 {
-    size_t i, x, y, width, height, depth, w, h;
+    size_t x, y, width, height, w, h;
     FT_Error error;
     FT_Glyph ft_glyph;
     FT_GlyphSlot slot;
@@ -162,63 +161,41 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
 
     unsigned int glyph_index;
     ft::Glyph *glyph;
-    ivec4 region;
+    Vector4i region;
     size_t missed = 0;
-
-    assert( self );
-    assert( charcodes );
 
     ft::FontFace face(self->_path, self->_size);
 
-    width  = self->_atlas->width;
-    height = self->_atlas->height;
-    depth  = self->_atlas->depth;
+    width  = self->_atlas->getWidth();
+    height = self->_atlas->getHeight();
 
     /* Load each glyph */
-    for( i=0; i<wcslen(charcodes); ++i )
-    {
-        int ft_bitmap_width = 0;
-        int ft_bitmap_rows = 0;
-        int ft_bitmap_pitch = 0;
-        int ft_glyph_top = 0;
-        int ft_glyph_left = 0;
+    for (std::size_t i = 0; i < wcslen(charcodes); ++i) {
         glyph_index = face.getCharIndex(charcodes[i]);
-        // WARNING: We use texture-atlas depth to guess if user wants
-        //          LCD subpixel rendering
         if (glyph_index == 0) // skip
             continue;
 
         slot            = face.loadGlyph(glyph_index);
         ft_bitmap       = slot->bitmap;
-        ft_bitmap_width = slot->bitmap.width;
-        ft_bitmap_rows  = slot->bitmap.rows;
-        ft_bitmap_pitch = slot->bitmap.pitch;
-        ft_glyph_top    = slot->bitmap_top;
-        ft_glyph_left   = slot->bitmap_left;
 
-        // We want each glyph to be separated by at least one black pixel
-        // (for example for shader used in demo-subpixel.c)
-        w = ft_bitmap_width/depth + padding;
-        h = ft_bitmap_rows + padding;
-        region = texture_atlas_get_region( self->_atlas, w, h );
+        w = slot->bitmap.width;
+        h = slot->bitmap.rows;
+        region = self->_atlas->getRegion(w + padding, h + padding);
         if (region.x < 0) {
           missed++;
           fprintf( stderr, "Texture atlas is full (line %d) (size %lu)\n", __LINE__, i );
           break;
         }
-        w = w - padding;
-        h = h - padding;
         x = region.x + (padding >> 1);
         y = region.y + (padding >> 1);
-        texture_atlas_set_region( self->_atlas, x, y, w, h,
-                                  ft_bitmap.buffer, ft_bitmap.pitch );
+        self->_atlas->setRegion(x, y, w, h, ft_bitmap.buffer, ft_bitmap.pitch);
 
         glyph = new ft::Glyph;
         glyph->charcode = charcodes[i];
         glyph->width    = w;
         glyph->height   = h;
-        glyph->offset_x = ft_glyph_left;
-        glyph->offset_y = ft_glyph_top;
+        glyph->offset_x = slot->bitmap_left;
+        glyph->offset_y = slot->bitmap_top;
         glyph->s0       = x/(float)width;
         glyph->t0       = y/(float)height;
         glyph->s1       = (x + glyph->width)/(float)width;

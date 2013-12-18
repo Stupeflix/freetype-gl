@@ -3,8 +3,9 @@
 
 #include <vector>
 #include "ft/ft.hpp"
+#include FT_GLYPH_H
 #include "ft/Glyph.hpp"
-#include "texture-atlas.h"
+#include "core/TextureAtlas.hpp"
 
 /**
  * This class can generate a texture altas from a list of
@@ -16,7 +17,7 @@ class TextureFont {
   /**
    * Create a font from a filename and the font size.
    */
-  explicit TextureFont(texture_atlas_t *atlas,
+  explicit TextureFont(core::TextureAtlas *atlas,
                        std::string const &path,
                        float size);
 
@@ -49,7 +50,7 @@ class TextureFont {
   std::vector<ft::Glyph *> _glyphs;
 
   /** Generated atlas from this font */
-  texture_atlas_t *_atlas;
+  core::TextureAtlas *_atlas;
 
   /** Path to the font file */
   std::string _path;

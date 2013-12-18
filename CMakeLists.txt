@@ -19,7 +19,6 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB TMPHEADERS "*.h")
 
 set(TMPSOURCES
-  texture-atlas.cpp
   texture-font.cpp
   vector.cpp
   edtaa3func.cpp
