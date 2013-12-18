@@ -9,43 +9,6 @@
 #include <wchar.h>
 #include "texture-font.h"
 
-static unsigned int
-_get_next_power_of_two(unsigned int v)
-{
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    return v + 1;
-}
-
-static wchar_t *
-_get_all_charcodes()
-{
-    wchar_t *cache = (wchar_t *) malloc(65536 * sizeof(wchar_t));
-    wchar_t i;
-    if (cache == NULL)
-    {
-        fprintf(stderr, "Error: Cannot allocate unicode cache.\n");
-        return 0;
-    }
-    for (i = 32; i < 65535; ++i) {
-        cache[i - 32] = i;
-    }
-    cache[i] = 0;
-    return cache;
-}
-
-static int
-_compute_atlas(TextureFont *self, ft::FontFace const &face)
-{
-    size_t size = self->_chars.size();
-    size = _get_next_power_of_two((size * self->_size) / 20);
-    self->_atlas = new core::TextureAtlas(size, size);
-    return 0;
-}
-
 TextureFont::TextureFont(core::TextureAtlas *atlas,
                          std::string const &path,
                          float size) :
@@ -58,8 +21,6 @@ TextureFont::TextureFont(core::TextureAtlas *atlas,
   ft::FontFace face(path, size * 100);
 
   _chars = face.getCharacters();
-  // _cache = _get_all_charcodes();
-  // _glyphs = vector_new( sizeof(ft::Glyph *) );
   _atlas = atlas;
   _height = 0;
   _padding = 0;
@@ -69,7 +30,7 @@ TextureFont::TextureFont(core::TextureAtlas *atlas,
   _kerning = 1;
 
   if (_atlas == NULL)
-    _compute_atlas(this, face);
+    _atlas = new core::TextureAtlas(1024, 1024);
 
   _ascender = face.getAscender() / 100.0;
   _descender = face.getDescender() / 100.0;
