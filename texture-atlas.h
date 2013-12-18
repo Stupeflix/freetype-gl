@@ -10,6 +10,7 @@ extern "C" {
 
 #include "vector.h"
 #include "vec234.h"
+#include "math/Vector3.hpp"
 
 /**
  * A texture atlas is used to pack several small regions into a single texture.

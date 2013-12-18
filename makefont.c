@@ -102,7 +102,7 @@ int main( int argc, char **argv )
     size_t max_kerning_count = 1;
     for( i=0; i < glyph_count; ++i )
     {
-        texture_glyph_t *glyph = *(texture_glyph_t **) vector_get( font->glyphs, i );
+        Glyph *glyph = *(Glyph **) vector_get( font->glyphs, i );
 
         if( vector_size(glyph->kerning) > max_kerning_count )
         {
@@ -178,7 +178,7 @@ int main( int argc, char **argv )
         L"    float s0, t0, s1, t1;\n"
         L"    size_t kerning_count;\n"
         L"    kerning_t kerning[%d];\n"
-        L"} texture_glyph_t;\n\n", max_kerning_count );
+        L"} Glyph;\n\n", max_kerning_count );
 
     fwprintf( file,
         L"typedef struct\n"
@@ -193,7 +193,7 @@ int main( int argc, char **argv )
         L"    float ascender;\n"
         L"    float descender;\n"
         L"    size_t glyphs_count;\n"
-        L"    texture_glyph_t glyphs[%d];\n"
+        L"    Glyph glyphs[%d];\n"
         L"} texture_font_t;\n\n", texture_size, glyph_count );
 
 
@@ -241,7 +241,7 @@ int main( int argc, char **argv )
     fwprintf( file, L" {\n" );
     for( i=0; i < glyph_count; ++i )
     {
-        texture_glyph_t * glyph = *(texture_glyph_t **) vector_get( font->glyphs, i );
+        Glyph * glyph = *(Glyph **) vector_get( font->glyphs, i );
 
 /*
         // Debugging information

@@ -32,7 +32,8 @@ class Library {
    * Release freetype.
    */
   static void _atExit() {
-    FT_Done_FreeType(_handle);
+    if (_initialized)
+      FT_Done_FreeType(_handle);
   }
 
   static FT_Library _handle;

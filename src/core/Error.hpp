@@ -3,9 +3,8 @@
 
 #include <string>
 #include <exception>
-#include <ft2build.h>
+#include "ft.hpp"
 #include "utils/convert.hpp"
-#include FT_FREETYPE_H
 
 namespace ft {
 
@@ -41,7 +40,7 @@ class Error : public std::exception {
       _what += convert<std::string>(line) + ": ";
     _what = "Freetype fails with code ";
     _what += convert<std::string>(getCode()) + " and message \"";
-    _what += convert<std::string>(FT_Errors[error].message) + "\".";
+    _what += std::string(FT_Errors[error].message) + "\".";
   }
 
   /**

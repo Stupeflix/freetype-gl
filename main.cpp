@@ -6,7 +6,7 @@
 #include "edtaa3func.h"
 
 // ------------------------------------------------------- global variables ---
-texture_font_t  * font  = 0;
+TextureFont  * font  = 0;
 
 // ------------------------------------------------------ make_distance_map ---
 unsigned char *
@@ -99,7 +99,7 @@ create_atlas_file( char const *font_file )
         fprintf( stderr, "Error: Cannot open file \"%s\".\n", output_file );
         return 1;
     }
-    fwrite( font->atlas->data, font->atlas->width * font->atlas->height, sizeof(unsigned char), file_stream );
+    fwrite( font->_atlas->data, font->_atlas->width * font->_atlas->height, sizeof(unsigned char), file_stream );
     if( file_stream != NULL )
         fclose(file_stream);
     fprintf(stdout, "OK\n");
@@ -108,7 +108,7 @@ create_atlas_file( char const *font_file )
 
 void
 write_glyph( FILE * file_stream,
-             texture_glyph_t const * glyph,
+             Glyph const * glyph,
              char is_last )
 {
     fprintf(file_stream,
@@ -140,17 +140,17 @@ create_json_file( const char *font_file )
         return 1;
     }
     fprintf(file_stream, "{\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
-    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->glyphs->size);
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
+    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
     fprintf(file_stream, "  \"glyphs\": {\n");
     size_t i;
-    for( i = 1; i < font->glyphs->size; ++i )
+    for( i = 1; i < font->_glyphs->size; ++i )
     {
         write_glyph(
             file_stream,
-            *(texture_glyph_t **)vector_get(font->glyphs, i),
-            i + 1 == font->glyphs->size
+            *(Glyph **)vector_get(font->_glyphs, i),
+            i + 1 == font->_glyphs->size
         );
     }
     fprintf(file_stream, "  }\n");
@@ -180,17 +180,17 @@ create_python_file( const char *font_file )
     fprintf(file_stream, "#!/usr/bin/env python\n");
     fprintf(file_stream, "# -*- coding: utf-8 -*-\n");
     fprintf(file_stream, "data = {\n");
-    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->atlas->width);
-    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->atlas->height);
-    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->glyphs->size);
+    fprintf(file_stream, "  \"atlas_width\": %lu,\n", font->_atlas->width);
+    fprintf(file_stream, "  \"atlas_height\": %lu,\n", font->_atlas->height);
+    fprintf(file_stream, "  \"glyphs_number\": %lu,\n", font->_glyphs->size);
     fprintf(file_stream, "  \"glyphs\": {\n");
     size_t i;
-    for( i = 1; i < font->glyphs->size; ++i )
+    for( i = 1; i < font->_glyphs->size; ++i )
     {
         write_glyph(
             file_stream,
-            *(texture_glyph_t **)vector_get(font->glyphs, i),
-            i + 1 == font->glyphs->size
+            *(Glyph **)vector_get(font->_glyphs, i),
+            i + 1 == font->_glyphs->size
         );
     }
     fprintf(file_stream, "  }\n");
@@ -231,8 +231,8 @@ main( int argc, char **argv )
 
     fprintf( stdout, "    Generate distance map..." );
     fflush( stdout );
-    map = make_distance_map( font->atlas->data, font->atlas->width, font->atlas->height );
-    memcpy( font->atlas->data, map, font->atlas->width * font->atlas->height * sizeof(unsigned char) );
+    map = make_distance_map( font->_atlas->data, font->_atlas->width, font->_atlas->height );
+    memcpy( font->_atlas->data, map, font->_atlas->width * font->_atlas->height * sizeof(unsigned char) );
     free( map );
     fprintf( stdout, "OK\n");
     if ( create_atlas_file(font_file) != 0 )
@@ -242,7 +242,7 @@ main( int argc, char **argv )
 
     printf("\n");
 
-    texture_atlas_delete( font->atlas );
+    texture_atlas_delete( font->_atlas );
     texture_font_delete( font );
 
     return 0;

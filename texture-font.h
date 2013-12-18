@@ -35,294 +35,121 @@
 #define __TEXTURE_FONT_H__
 
 #include <stdlib.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <vector>
 
 #include "vector.h"
 #include "texture-atlas.h"
 
 /**
- * @file   texture-font.h
- * @author Nicolas Rougier (Nicolas.Rougier@inria.fr)
- *
- * @defgroup texture-font Texture font
- *
- * Texture font.
- *
- * Example Usage:
- * @code
- * #include "texture-font.h"
- *
- * int main( int arrgc, char *argv[] )
- * {
- *   return 0;
- * }
- * @endcode
- *
- * @{
- */
-
-
-
-/**
- * A structure that hold a kerning value relatively to a charcode.
+ * @struct Kerning
+ * A structure that hold a kerning value relatively to the left
+ * charcode.
  *
  * This structure cannot be used alone since the (necessary) right charcode is
  * implicitely held by the owner of this structure.
  */
-typedef struct
-{
-    /**
-     * Left character code in the kern pair.
-     */
-    wchar_t charcode;
-    
-    /**
-     * Kerning value (in fractional pixels).
-     */
-    float kerning;
-
-} kerning_t;
-
-
-
-
-/*
- * Glyph metrics:
- * --------------
- *
- *                       xmin                     xmax
- *                        |                         |
- *                        |<-------- width -------->|
- *                        |                         |    
- *              |         +-------------------------+----------------- ymax
- *              |         |    ggggggggg   ggggg    |     ^        ^
- *              |         |   g:::::::::ggg::::g    |     |        | 
- *              |         |  g:::::::::::::::::g    |     |        | 
- *              |         | g::::::ggggg::::::gg    |     |        | 
- *              |         | g:::::g     g:::::g     |     |        | 
- *    offset_x -|-------->| g:::::g     g:::::g     |  offset_y    | 
- *              |         | g:::::g     g:::::g     |     |        | 
- *              |         | g::::::g    g:::::g     |     |        | 
- *              |         | g:::::::ggggg:::::g     |     |        |  
- *              |         |  g::::::::::::::::g     |     |      height
- *              |         |   gg::::::::::::::g     |     |        | 
- *  baseline ---*---------|---- gggggggg::::::g-----*--------      |
- *            / |         |             g:::::g     |              | 
- *     origin   |         | gggggg      g:::::g     |              | 
- *              |         | g:::::gg   gg:::::g     |              | 
- *              |         |  g::::::ggg:::::::g     |              | 
- *              |         |   gg:::::::::::::g      |              | 
- *              |         |     ggg::::::ggg        |              | 
- *              |         |         gggggg          |              v
- *              |         +-------------------------+----------------- ymin
- *              |                                   |
- *              |------------- advance_x ---------->|
- */
+struct Kerning {
+  wchar_t charcode; /** Left character code in the pair. */
+  float kerning; /** Kerning value (in fractional pixels). */
+};
 
 /**
- * A structure that describe a glyph.
+ * @struct Glyph
+ * A structure that describe glyph data.
  */
-typedef struct
-{
-    /**
-     * Wide character this glyph represents
-     */
-    wchar_t charcode;
+struct Glyph {
 
-    /**
-     * Glyph id (used for display lists)
-     */
-    unsigned int id;
+  /** Glyph's charcode. */
+  wchar_t charcode;
 
-    /**
-     * Glyph's width in pixels.
-     */
-    size_t width;
+  /** Glyph's id (for OpenGL). */
+  unsigned int id;
 
-    /**
-     * Glyph's height in pixels.
-     */
-    size_t height;
+  /** Glyph's width in pixels. */
+  size_t width;
 
-    /**
-     * Glyph's left bearing expressed in integer pixels.
-     */
-    int offset_x;
+  /** Glyph's height in pixels. */
+  size_t height;
 
-    /**
-     * Glyphs's top bearing expressed in integer pixels.
-     *
-     * Remember that this is the distance from the baseline to the top-most
-     * glyph scanline, upwards y coordinates being positive.
-     */
-    int offset_y;
+  /** Glyph's left offset in pixels. */
+  int offset_x;
 
-    /**
-     * For horizontal text layouts, this is the horizontal distance (in
-     * fractional pixels) used to increment the pen position when the glyph is
-     * drawn as part of a string of text.
-     */
-    float advance_x;
+  /** Glyph's top offset in pixels. */
+  int offset_y;
 
-    /**
-     * For vertical text layouts, this is the vertical distance (in fractional
-     * pixels) used to increment the pen position when the glyph is drawn as
-     * part of a string of text.
-     */
-    float advance_y;
+  /** Glyph's advancement relative to the previous char. */
+  float advance_x;
 
-    /**
-     * First normalized texture coordinate (x) of top-left corner
-     */
-    float s0;
+  /** Glyph's advancement relative to the previous line. */
+  float advance_y;
 
-    /**
-     * Second normalized texture coordinate (y) of top-left corner
-     */
-    float t0;
+  /** Normalized texture coordinates. */
+  float s0, t0, s1, t1;
 
-    /**
-     * First normalized texture coordinate (x) of bottom-right corner
-     */
-    float s1;
+  /**
+   * A vector of kerning pairs relative to this glyph.
+   */
+  vector_t *kerning;
 
-    /**
-     * Second normalized texture coordinate (y) of bottom-right corner
-     */
-    float t1;
-
-    /**
-     * A vector of kerning pairs relative to this glyph.
-     */
-    vector_t * kerning;
-
-    /**
-     * Glyph outline type (0 = None, 1 = line, 2 = inner, 3 = outer)
-     */
-    int outline_type;
-
-    /**
-     * Glyph outline thickness
-     */
-    float outline_thickness;
-
-} texture_glyph_t;
+};
 
 
 
 /**
- *  Texture font structure.
+ * This class can generate a texture altas from a list of
+ * characters.
  */
-typedef struct
-{
-    /**
-     * Vector of glyphs contained in this font.
-     */
-    vector_t * glyphs;
+class TextureFont {
+ public:
 
     /**
-     * Atlas structure to store glyphs data.
+     * Create a font from a filename and the font size.
      */
-    texture_atlas_t * atlas;
+    explicit TextureFont(texture_atlas_t *atlas,
+                         std::string const &path,
+                         float size);
+
+    /**
+     * Free all memory allocated by the font.
+     */
+    ~TextureFont();
+
+    /** Generated glyphs from this font. */
+    vector_t *_glyphs;
+
+    /** Generated atlas from this font */
+    texture_atlas_t *_atlas;
+
+    /** Path to the font file */
+    std::string _path;
     
-    /**
-     * Font filename
-     */
-    char * filename;
+    /** Path to the font file */
+    char *filename;
 
-    /**
-     * Characters cache.
-     */
-    wchar_t * cache;
+    /** Cache which contains all chars stored into this texture font. */
+    wchar_t *_cache;
 
-    /**
-     * Font size
-     */
-    float size;
+    /** Font size used. */
+    float _size;
     
-    /**
-     * Whether to use autohint when rendering font
-     */
-    int hinting;
+    /** Whether to use kerning if available. */
+    int _kerning;
+
+    /** Default line height used. */
+    float _height;
 
     /**
-     * Outline type (0 = None, 1 = line, 2 = inner, 3 = outer)
+     * Representation of the space between the top of one letter and
+     * the bottom of the other.
      */
-    int outline_type;
+    float _linegap;
 
-    /**
-     * Outline thickness
-     */
-    float outline_thickness;
+    /** Distance between the baseline and the top of the highest char. */
+    float _ascender;
 
-    /** 
-     * Whether to use our own lcd filter.
-     */
-    int filtering;
-
-    /**
-     * Whether to use kerning if available
-     */
-    int kerning;
-
-    /**
-     * LCD filter weights
-     */
-    unsigned char lcd_weights[5];
-
-    /**
-     * This field is simply used to compute a default line spacing (i.e., the
-     * baseline-to-baseline distance) when writing text with this font. Note
-     * that it usually is larger than the sum of the ascender and descender
-     * taken as absolute values. There is also no guarantee that no glyphs
-     * extend above or below subsequent baselines when using this distance.
-     */
-    float height;
-
-    /**
-     * This field is the distance that must be placed between two lines of
-     * text. The baseline-to-baseline distance should be computed as:
-     * ascender - descender + linegap
-     */
-    float linegap;
-
-    /**
-     * The ascender is the vertical distance from the horizontal baseline to
-     * the highest 'character' coordinate in a font face. Unfortunately, font
-     * formats define the ascender differently. For some, it represents the
-     * ascent of all capital latin characters (without accents), for others it
-     * is the ascent of the highest accented character, and finally, other
-     * formats define it as being equal to bbox.yMax.
-     */
-    float ascender;
-
-    /**
-     * The descender is the vertical distance from the horizontal baseline to
-     * the lowest 'character' coordinate in a font face. Unfortunately, font
-     * formats define the descender differently. For some, it represents the
-     * descent of all capital latin characters (without accents), for others it
-     * is the ascent of the lowest accented character, and finally, other
-     * formats define it as being equal to bbox.yMin. This field is negative
-     * for values below the baseline.
-     */
-    float descender;
-
-    /**
-     * The position of the underline line for this face. It is the center of
-     * the underlining stem. Only relevant for scalable formats.
-     */
-    float underline_position;
-
-    /**
-     * The thickness of the underline for this face. Only relevant for scalable
-     * formats.
-     */
-    float underline_thickness;
-
-} texture_font_t;
+    /** Distance between the baseline and the bottom of the lowest char. */
+    float _descender;
+};
 
 
 
@@ -340,7 +167,7 @@ typedef struct
  * @return A new empty font (no glyph inside yet)
  *
  */
-  texture_font_t *
+  TextureFont *
   texture_font_new( texture_atlas_t * atlas,
                     const char * filename,
                     const float size );
@@ -353,7 +180,7 @@ typedef struct
  * @param self a valid texture font
  */
   void
-  texture_font_delete( texture_font_t * self );
+  texture_font_delete( TextureFont * self );
 
 
 /**
@@ -367,8 +194,8 @@ typedef struct
  *         enough
  *
  */
-  texture_glyph_t *
-  texture_font_get_glyph( texture_font_t * self,
+  Glyph *
+  texture_font_get_glyph( TextureFont * self,
                           wchar_t charcode );
 
 
@@ -383,7 +210,7 @@ typedef struct
  *         every glyphs.
  */
   size_t
-  texture_font_load_glyphs( texture_font_t * self,
+  texture_font_load_glyphs( TextureFont * self,
                             const wchar_t * charcodes );
 
 /**
@@ -397,7 +224,7 @@ typedef struct
  *         every glyphs.
  */
   size_t
-  texture_font_load_glyphs_with_padding( texture_font_t * self,
+  texture_font_load_glyphs_with_padding( TextureFont * self,
                             const wchar_t * charcodes,
                             size_t padding );
 
@@ -408,7 +235,7 @@ typedef struct
  * @param padding   the paddding between each letters
  */
 size_t
-texture_font_load_with_padding( texture_font_t * self,
+texture_font_load_with_padding( TextureFont * self,
                                 size_t padding );
 
 /**
@@ -420,7 +247,7 @@ texture_font_load_with_padding( texture_font_t * self,
  * @return x kerning value
  */
 float 
-texture_glyph_get_kerning( const texture_glyph_t * self,
+texture_glyph_get_kerning( const Glyph * self,
                            const wchar_t charcode );
 
 
@@ -429,15 +256,11 @@ texture_glyph_get_kerning( const texture_glyph_t * self,
  *
  * @return a new empty glyph (not valid)
  */
-texture_glyph_t *
+Glyph *
 texture_glyph_new( void );
 
 /** @} */
 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __TEXTURE_FONT_H__ */
 
