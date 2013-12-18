@@ -8,7 +8,7 @@
 
 // ------------------------------------------------------- global variables ---
 core::TextureAtlas atlas(1024, 1024);
-TextureFont  * font  = 0;
+core::TextureFont  * font  = 0;
 
 // ------------------------------------------------------ make_distance_map ---
 unsigned char *
@@ -184,7 +184,7 @@ int main( int argc, char **argv ) {
   std::cout << std::endl << "    Generate font texture and atlas..."
             << std::flush;
 
-  font = new TextureFont(atlas, font_file, resolution);
+  font = new core::TextureFont(atlas, font_file, resolution);
   font->setPadding(25);
   font->generate();
 

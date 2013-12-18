@@ -5,6 +5,8 @@
 #include "ft/Glyph.hpp"
 #include "core/TextureAtlas.hpp"
 
+namespace core {
+
 /**
  * This class can generate a texture altas from a list of
  * characters.
@@ -58,3 +60,4 @@ class TextureFont {
   float _descender;
 };
 
+}

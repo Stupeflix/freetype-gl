@@ -67,23 +67,29 @@ unsigned int FontFace::getCharIndex(wchar_t charcode) const {
   return FT_Get_Char_Index(_face, charcode);
 }
 
-FT_GlyphSlot FontFace::loadGlyph(unsigned int index, int flags) const {
-  FT_Error error = FT_Load_Glyph(_face, index, flags);
+ft::Glyph *FontFace::loadGlyph(wchar_t charcode, int flags) const {
+  FT_Error error = FT_Load_Glyph(_face, getCharIndex(charcode), flags);
   if (error)
     throw ft::Error(error);
-
-  ft::Glyph glyph;
-
-
-  return _face->glyph;
+  ft::Glyph *glyph = new ft::Glyph;
+  glyph->charcode = charcode;
+  glyph->offset_x = _face->glyph->bitmap_left;
+  glyph->offset_y = _face->glyph->bitmap_top;
+  glyph->width = _face->glyph->bitmap.width;
+  glyph->height = _face->glyph->bitmap.rows;
+  glyph->advance_x = _face->glyph->advance.x / _hres;
+  glyph->advance_y = _face->glyph->advance.y / _hres;
+  glyph->buffer = _face->glyph->bitmap.buffer;
+  glyph->pitch = _face->glyph->bitmap.pitch;
+  return glyph;
 }
 
-Vector2i FontFace::getKerning(unsigned int prev,
-                              unsigned int index,
+Vector2i FontFace::getKerning(wchar_t prev,
+                              wchar_t current,
                               unsigned int mode) const {
   Vector2i v;
   FT_Vector tmp;
-  FT_Get_Kerning(_face, prev, index, mode, &tmp);
+  FT_Get_Kerning(_face, getCharIndex(prev), getCharIndex(current), mode, &tmp);
   v.x = tmp.x;
   v.y = tmp.y;
   return v;

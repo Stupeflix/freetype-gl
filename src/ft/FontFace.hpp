@@ -62,17 +62,17 @@ class FontFace {
   unsigned int getCharIndex(wchar_t charcode) const;
 
   /**
-   * Return the kerning value between the 2 given char indices.
+   * Return the kerning value between the 2 given charcode.
    */
-  Vector2i getKerning(unsigned int prev,
-                      unsigned int index,
+  Vector2i getKerning(wchar_t prev,
+                      wchar_t current,
                       unsigned int mode = FT_KERNING_UNFITTED) const;
 
   /**
-   * Load a glyph from the given index.
+   * Load a glyph from its charcode.
    */
-  FT_GlyphSlot loadGlyph(unsigned int index,
-                         int flags = FT_LOAD_RENDER) const;
+  ft::Glyph *loadGlyph(wchar_t charcode,
+                      int flags = FT_LOAD_RENDER) const;
 
   /**
    * Return all characters presents into this font.

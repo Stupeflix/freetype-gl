@@ -55,6 +55,10 @@ class Glyph {
   /** Normalized texture coordinates. */
   float s0, t0, s1, t1;
 
+  unsigned char *buffer;
+
+  std::size_t pitch;
+
   /**
    * A vector of kerning pairs relative to this glyph.
    */
