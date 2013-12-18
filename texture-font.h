@@ -28,13 +28,15 @@ class TextureFont {
   ~TextureFont();
 
   /**
-   * Request a new glyph from the font. If it has not been created yet, it will
-   * be. 
-   * @param charcode The code of the character to load.
-   * @return A pointer on the new glyph or NULL if the texture atlas isnt big
-   * enough.
+   * Set the padding value.
    */
-  ft::Glyph *getGlyph(wchar_t charcode);
+  void setPadding(size_t padding);
+
+  /**
+   * Generate the texture from the chars into the texture fonts
+   * and others settings (like padding).
+   */
+  void generate();
 
   /**
    * Load the font and store data into the given `FT_Face`.
@@ -59,8 +61,9 @@ class TextureFont {
   char *filename;
 
   /** Cache which contains all chars stored into this texture font. */
-  wchar_t *_cache;
   std::wstring _chars;
+
+  size_t _padding;
 
   /** Font size used. */
   float _size;
@@ -83,43 +86,4 @@ class TextureFont {
   /** Distance between the baseline and the bottom of the lowest char. */
   float _descender;
 };
-
-/**
- * Request the loading of several glyphs at once.
- *
- * @param self      a valid texture font
- * @param charcodes character codepoints to be loaded.
- * @param padding   the padding between each letters
- *
- * @return Number of missed glyph if the texture is not big enough to hold
- *         every glyphs.
- */
-  size_t
-  texture_font_load_glyphs( TextureFont * self,
-                            const wchar_t * charcodes );
-
-/**
- * Request the loading of several glyphs at once.
- *
- * @param self      a valid texture font
- * @param charcodes character codepoints to be loaded.
- * @param padding   the padding between each letters
- *
- * @return Number of missed glyph if the texture is not big enough to hold
- *         every glyphs.
- */
-  size_t
-  texture_font_load_glyphs_with_padding( TextureFont * self,
-                            const wchar_t * charcodes,
-                            size_t padding );
-
-/**
- * Load all unicodes characters for this font (0 to 65536).
- *
- * @param self      a valid texture font
- * @param padding   the paddding between each letters
- */
-size_t
-texture_font_load_with_padding( TextureFont * self,
-                                size_t padding );
 

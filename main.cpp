@@ -184,7 +184,8 @@ int main( int argc, char **argv ) {
             << std::flush;
 
   font = new TextureFont( NULL, font_file, resolution );
-  texture_font_load_with_padding( font, 25 );
+  font->setPadding(25);
+  font->generate();
 
   std::cout << "OK" << std::endl;
 

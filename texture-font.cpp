@@ -40,16 +40,6 @@ _get_all_charcodes()
 static int
 _compute_atlas(TextureFont *self, ft::FontFace const &face)
 {
-    // size_t size = 0;
-    // size_t i;
-
-    // for( i=0; i<wcslen(self->_cache); ++i )
-    // {
-    //     if (self->_cache[i] == '\n')
-    //         continue;
-    //     if (face.getCharIndex(self->_cache[i]))
-    //         size++;
-    // }
     size_t size = self->_chars.size();
     size = _get_next_power_of_two((size * self->_size) / 20);
     self->_atlas = new core::TextureAtlas(size, size);
@@ -68,10 +58,11 @@ TextureFont::TextureFont(core::TextureAtlas *atlas,
   ft::FontFace face(path, size * 100);
 
   _chars = face.getCharacters();
-  _cache = _get_all_charcodes();
+  // _cache = _get_all_charcodes();
   // _glyphs = vector_new( sizeof(ft::Glyph *) );
   _atlas = atlas;
   _height = 0;
+  _padding = 0;
   _ascender = 0;
   _descender = 0;
   _size = size;
@@ -91,20 +82,8 @@ TextureFont::~TextureFont() {
     delete glyph;
 }
 
-ft::Glyph *TextureFont::getGlyph(wchar_t charcode) {
-  wchar_t buffer[2] = {0,0};
-
-  /* Check if charcode has been already loaded */
-  for(auto glyph : _glyphs) {
-    if (glyph->charcode == charcode)
-      return glyph;
-  }
-
-  /* Glyph has not been already loaded */
-  buffer[0] = charcode;
-  if (texture_font_load_glyphs(this, buffer) == 0)
-    return _glyphs.back();
-  return NULL;
+void TextureFont::setPadding(size_t padding) {
+  _padding = padding;
 }
 
 void TextureFont::_computeKerning() {
@@ -133,28 +112,7 @@ void TextureFont::_computeKerning() {
   }
 }
 
-// ----------------------------------------------- texture_font_load_glyphs ---
-size_t
-texture_font_load_glyphs( TextureFont * self,
-                          const wchar_t * charcodes )
-{
-    return texture_font_load_glyphs_with_padding(self, charcodes, 1);
-}
-
-// ----------------------------------------- texture_font_load_with_padding ---
-size_t
-texture_font_load_with_padding( TextureFont * self,
-                                size_t padding )
-{
-    return texture_font_load_glyphs_with_padding(self, self->_cache, padding);
-}
-
-// ---------------------------------- texture_font_load_glyphs_with_padding ---
-size_t
-texture_font_load_glyphs_with_padding( TextureFont * self,
-                          const wchar_t * charcodes,
-                          size_t padding )
-{
+void TextureFont::generate() {
     size_t x, y, w, h;
     FT_Error error;
     FT_Glyph ft_glyph;
@@ -166,14 +124,14 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
     Vector4i region;
     size_t missed = 0;
 
-    ft::FontFace face(self->_path, self->_size);
+    ft::FontFace face(_path, _size);
 
-    size_t width  = self->_atlas->getWidth();
-    size_t height = self->_atlas->getHeight();
+    size_t width  = _atlas->getWidth();
+    size_t height = _atlas->getHeight();
 
     /* Load each glyph */
-    for (std::size_t i = 0; i < self->_chars.size(); ++i) {
-        glyph_index = face.getCharIndex(self->_chars[i]);
+    for (std::size_t i = 0; i < _chars.size(); ++i) {
+        glyph_index = face.getCharIndex(_chars[i]);
         if (glyph_index == 0) // skip
             continue;
 
@@ -182,18 +140,18 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
 
         w = slot->bitmap.width;
         h = slot->bitmap.rows;
-        region = self->_atlas->getRegion(w + padding, h + padding);
+        region = _atlas->getRegion(w + _padding, h + _padding);
         if (region.x < 0) {
           missed++;
           fprintf( stderr, "Texture atlas is full (line %d) (size %lu)\n", __LINE__, i );
           break;
         }
-        x = region.x + (padding >> 1);
-        y = region.y + (padding >> 1);
-        self->_atlas->setRegion(x, y, w, h, ft_bitmap.buffer, ft_bitmap.pitch);
+        x = region.x + (_padding >> 1);
+        y = region.y + (_padding >> 1);
+        _atlas->setRegion(x, y, w, h, ft_bitmap.buffer, ft_bitmap.pitch);
 
         glyph = new ft::Glyph;
-        glyph->charcode = self->_chars[i];
+        glyph->charcode = _chars[i];
         glyph->width    = w;
         glyph->height   = h;
         glyph->offset_x = slot->bitmap_left;
@@ -204,10 +162,9 @@ texture_font_load_glyphs_with_padding( TextureFont * self,
         glyph->t1       = (y + glyph->height)/(float)height;
         glyph->advance_x = slot->advance.x / face.getHorizontalResolution();
         glyph->advance_y = slot->advance.y / face.getHorizontalResolution();
-        self->_glyphs.push_back(glyph);
+        _glyphs.push_back(glyph);
     }
-    self->_computeKerning();
-    return missed;
+    _computeKerning();
 }
 
 
