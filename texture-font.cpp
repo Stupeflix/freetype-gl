@@ -9,14 +9,15 @@
 #include <wchar.h>
 #include "texture-font.h"
 
-static size_t
-_get_next_power_of_two(size_t v)
+static unsigned int
+_get_next_power_of_two(unsigned int v)
 {
     v |= v >> 1;
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
     v |= v >> 16;
+    v |= v >> 32;
     return v + 1;
 }
 
