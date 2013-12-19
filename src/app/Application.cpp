@@ -25,6 +25,9 @@ void Application::start(Command const &cmd) {
   core::Distmap distmap(size, size);
   distmap.generate(atlas);
   std::string prefix = cmd.getOption<std::string>("output_dir") + "/";
+  size_t slash = path.find_last_of('/');
+  if (slash != std::string::npos)
+    path = path.substr(slash + 1);
   distmap.saveToPng(prefix + path + ".png");
 
   /* Save meta data */
