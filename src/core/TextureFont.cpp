@@ -65,24 +65,29 @@ void TextureFont::_computeKerning() {
 
 void TextureFont::generate() {
     ft::FontFace face(_path, _size);
-    std::size_t x = 0;
-    std::size_t y = 0;
 
-    /* Load each glyph */
     for (std::size_t i = 0; i < _cache.size(); ++i) {
-        ft::Glyph *glyph = face.loadGlyph(_cache[i]);
-        glyph->s0 = x/(float)_atlas.getWidth();
-        glyph->t0 = y/(float)_atlas.getHeight();
-        glyph->s1 = (x + glyph->width)/(float)_atlas.getWidth();
-        glyph->t1 = (y + glyph->height)/(float)_atlas.getHeight();
-        _glyphs.push_back(glyph);
 
-        Rect const &region = _atlas.getRegion(glyph->width + _padding, glyph->height + _padding);
-        if (region.x < 0)
-          throw std::out_of_range("Atlas is full.");
-        x = region.x + (_padding >> 1);
-        y = region.y + (_padding >> 1);
-        _atlas.setRegion(x, y, glyph->width, glyph->height, glyph->buffer, glyph->pitch);
+      /* Load glyphs data from face */
+      std::size_t x = 0;
+      std::size_t y = 0;
+      ft::Glyph *glyph = face.loadGlyph(_cache[i]);
+
+      /* Place the texture into the altas */
+      Rect const &region = _atlas.getRegion(glyph->width + _padding, glyph->height + _padding);
+      if (region.x < 0)
+        throw std::out_of_range("Atlas is full.");
+      x = region.x + (_padding >> 1);
+      y = region.y + (_padding >> 1);
+      _atlas.setRegion(x, y, glyph->width, glyph->height, glyph->buffer, glyph->pitch);
+
+      /* Deduce texture coordinates from atlas region */
+      glyph->s0 = x/(float)_atlas.getWidth();
+      glyph->t0 = y/(float)_atlas.getHeight();
+      glyph->s1 = (x + glyph->width)/(float)_atlas.getWidth();
+      glyph->t1 = (y + glyph->height)/(float)_atlas.getHeight();
+      _glyphs.push_back(glyph);
+
     }
     _computeKerning();
 }
