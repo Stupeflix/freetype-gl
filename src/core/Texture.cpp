@@ -120,7 +120,8 @@ void Texture::loadFromPng(std::string const &path) {
   delete[] row_pointers;
 }
 
-void Texture::saveToPng(std::string const &path) {
+void Texture::saveToPng(std::string const &path,
+                        ColorType type) {
   int y;
   FILE *fp = fopen(path.c_str(), "wb");
   if (!fp)
@@ -152,14 +153,26 @@ void Texture::saveToPng(std::string const &path) {
     for (int x = 0; x < _width; ++x) {
       png_bytep px = &(row_pointers[y][x * 4]);
       int i = (y * _width + x);
-      // std::cout << "color = " << int(_data[i]) << ", "
-      //           << int(_data[i + 1]) << ", "
-      //           << int(_data[i + 2]) << ", "
-      //           << int(_data[i + 3]) << std::endl; 
-      px[0] = _data[i];
-      px[1] = _data[i + 1];
-      px[2] = _data[i + 2];
-      px[3] = _data[i + 3];
+      switch (type) {
+        case AlphaRate:
+          px[0] = 255;
+          px[1] = 255;
+          px[2] = 255;
+          px[3] = _data[i];
+          break;
+        case BlackAndWhite:
+          px[0] = _data[i];
+          px[1] = _data[i];
+          px[2] = _data[i];
+          px[3] = 255;
+          break;
+        default:
+          px[0] = _data[i];
+          px[1] = _data[i + 1];
+          px[2] = _data[i + 2];
+          px[3] = _data[i + 3];
+          break;
+      };
     }
   }
 

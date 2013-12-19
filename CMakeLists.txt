@@ -30,7 +30,6 @@ target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${MATH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
 
-# Copy font and shaders into build directory for in-place testing
+# Copy fonts into build directory for testing.
 file(GLOB FONTS "fonts/*.ttf")
 file(COPY ${FONTS}   DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/fonts)
-file(COPY "make_png.py" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

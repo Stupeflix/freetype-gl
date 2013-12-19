@@ -40,22 +40,27 @@ void FontTexture::setPadding(size_t padding) {
   _padding = padding;
 }
 
-void FontTexture::_computeKerning() {
-  ft::Glyph *glyph, *prev;
-  
-  /* Compute kernings. */
+std::string FontTexture::toJson() const {
+  std::string json;
+
+  std::string atlas_width = convert<std::string>(_atlas.getWidth());
+  std::string atlas_height = convert<std::string>(_atlas.getHeight());
+  std::string glyphs_number = convert<std::string>(_glyphs.size());
+
+  json += "{\n";
+  json += "  \"atlas_width\": " + atlas_width + ",\n";
+  json += "  \"atlas_height\": " + atlas_height + ",\n";
+  json += "  \"glyphs_number\": " + glyphs_number + ",\n";
+  json += "  \"glyphs\": {\n";
   for (size_t i = 1; i < _glyphs.size(); ++i) {
-    glyph = _glyphs[i];
-    for (size_t j = 1; j < _glyphs.size(); ++j) {
-      prev = _glyphs[j];
-      Vector2i const &kerning = _face.getKerning(prev->charcode, glyph->charcode);
-      if( kerning.x ) {
-        // hres = 64
-        ft::Kerning k = {prev->charcode, kerning.x / (float)(64.0f * 64.0f)};
-        glyph->kerning.push_back(k);
-      }
-    }
+    json += "    " + _glyphs[i]->toJson();
+    if (i + 1 < _glyphs.size())
+      json += ",";
+    json += "\n";
   }
+  json += "  }\n";
+  json += "}\n";
+  return json;
 }
 
 void FontTexture::generate() {
@@ -86,6 +91,24 @@ void FontTexture::generate() {
 
   }
   _computeKerning();
+}
+
+void FontTexture::_computeKerning() {
+  ft::Glyph *glyph, *prev;
+  
+  /* Compute kernings. */
+  for (size_t i = 1; i < _glyphs.size(); ++i) {
+    glyph = _glyphs[i];
+    for (size_t j = 1; j < _glyphs.size(); ++j) {
+      prev = _glyphs[j];
+      Vector2i const &kerning = _face.getKerning(prev->charcode, glyph->charcode);
+      if( kerning.x ) {
+        // hres = 64
+        ft::Kerning k = {prev->charcode, kerning.x / (float)(64.0f * 64.0f)};
+        glyph->kerning.push_back(k);
+      }
+    }
+  }
 }
 
 }

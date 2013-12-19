@@ -34,6 +34,11 @@ class FontTexture {
   void setPadding(size_t padding);
 
   /**
+   * Save font meta-data to a json file.
+   */
+  std::string toJson() const;
+
+  /**
    * Generate the texture from the chars into the texture fonts
    * and others settings (like padding).
    */

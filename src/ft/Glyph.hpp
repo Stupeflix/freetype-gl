@@ -31,6 +31,11 @@ class Glyph {
    */
   float getKerning(const wchar_t charcode) const;
 
+  /**
+   * Get glyph's data into json format.
+   */
+  std::string toJson() const;
+
   /** Glyph's charcode. */
   wchar_t charcode;
 

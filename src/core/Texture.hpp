@@ -9,6 +9,12 @@ namespace core {
 class Texture {
  public:
 
+  enum ColorType {
+    AlphaRate,
+    BlackAndWhite,
+    Colored
+  };
+
   /**
    * Default constructor.
    */
@@ -57,7 +63,8 @@ class Texture {
   /**
    * Save the image to the given file path.
    */
-  void saveToPng(std::string const &path);
+  void saveToPng(std::string const &path,
+                 ColorType type = BlackAndWhite);
 
  protected:
 

@@ -39,9 +39,8 @@ void Atlas::setRegion(size_t x,
       y >= _height - 1 ||
       y + height > _height - 1)
     throw std::out_of_range("Cannot add the given region into this atlas.");
-  for (size_t i = 0; i < height; ++i) {
+  for (size_t i = 0; i < height; ++i)
     std::memcpy(_data + ((y + i) * _width + x), data + (i * stride), width);
-  }
 }
 
 Vector4s Atlas::getRegion(size_t width,
