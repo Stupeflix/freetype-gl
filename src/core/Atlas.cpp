@@ -2,37 +2,20 @@
 #include <cstring>
 #include <climits>
 #include <stdexcept>
-#include "core/TextureAtlas.hpp"
+#include "core/Atlas.hpp"
 
 namespace core {
 
-TextureAtlas::TextureAtlas(const size_t width, const size_t height) :
-  _width(width),
-  _height(height),
-  _used(0),
-  _data(new unsigned char[width*height]) {
+Atlas::Atlas(size_t width, size_t height) :
+  Texture(width, height),
+  _used(0) {
   Vector3i node = {1, 1, static_cast<int>(width) - 2};
   _nodes.push_back(node);
 }
 
-TextureAtlas::~TextureAtlas() {
-  if (_data)
-    delete _data;
-}
+Atlas::~Atlas() {}
 
-size_t TextureAtlas::getWidth() const {
-  return _width;
-}
-
-size_t TextureAtlas::getHeight() const {
-  return _height;
-}
-
-unsigned char *TextureAtlas::getData() const {
-  return _data;
-}
-
-void TextureAtlas::clear() {
+void Atlas::clear() {
   _nodes.clear();
   _used = 0;
 
@@ -41,30 +24,31 @@ void TextureAtlas::clear() {
   node.y = 1;
   node.z = _width - 2;
   _nodes.push_back(node);
-  std::memset(_data, 0, _width * _height);
+  std::memset(_data, 0, _width * _height * 4);
 }
 
-void TextureAtlas::setRegion(const size_t x,
-                             const size_t y,
-                             const size_t width,
-                             const size_t height,
-                             const unsigned char * data,
-                             const size_t stride) {
+void Atlas::setRegion(size_t x,
+                      size_t y,
+                      size_t width,
+                      size_t height,
+                      unsigned char *data,
+                      size_t stride) {
   if (x <= 0 || y <= 0 ||
       x >= _width - 1 ||
       x + width > _width - 1 ||
       y >= _height - 1 ||
       y + height > _height - 1)
     throw std::out_of_range("Cannot add the given region into this atlas.");
-  for (size_t i = 0; i < height; ++i)
-    std::memcpy(_data + ((y + i) * _width + x), data + (i*stride), width);
+  for (size_t i = 0; i < height; ++i) {
+    std::memcpy(_data + ((y + i) * _width + x), data + (i * stride), width);
+  }
 }
 
-Vector4s TextureAtlas::getRegion(const size_t width,
-                              const size_t height) {
+Vector4s Atlas::getRegion(size_t width,
+                          size_t height) {
 
   /* Find best index */
-  Vector4s region = {{0,0,width,height}};
+  Vector4s region(0, 0, width, height);
   int best_index = _findBestIndex(region, width, height);
   if (best_index == -1)
     return region;
@@ -99,9 +83,9 @@ Vector4s TextureAtlas::getRegion(const size_t width,
   return region;
 }
 
-int TextureAtlas::_findBestIndex(Vector4s &region,
-                                 size_t width,
-                                 size_t height) {
+int Atlas::_findBestIndex(Vector4s &region,
+                          size_t width,
+                          size_t height) {
   Vector3i node;
   int best_index = -1;
   int best_width = INT_MAX;
@@ -127,9 +111,9 @@ int TextureAtlas::_findBestIndex(Vector4s &region,
   return best_index;
 }
 
-int TextureAtlas::_checkFit(const size_t index,
-                            const size_t width,
-                            const size_t height) const {
+int Atlas::_checkFit(size_t index,
+                     size_t width,
+                     size_t height) const {
   Vector3i node;
   int x, y, width_left;
   size_t i;
@@ -153,7 +137,7 @@ int TextureAtlas::_checkFit(const size_t index,
   return y;
 }
 
-void TextureAtlas::_merge() {
+void Atlas::_merge() {
   for(size_t i = 0; i < _nodes.size() - 1; ++i) {
     Vector3i &node = _nodes[i];
     Vector3i &next = _nodes[i + 1];

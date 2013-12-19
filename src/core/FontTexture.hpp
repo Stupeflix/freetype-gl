@@ -3,7 +3,8 @@
 
 #include <vector>
 #include "ft/Glyph.hpp"
-#include "core/TextureAtlas.hpp"
+#include "ft/FontFace.hpp"
+#include "core/Atlas.hpp"
 
 namespace core {
 
@@ -11,13 +12,13 @@ namespace core {
  * This class can generate a texture altas from a list of
  * characters.
  */
-class TextureFont {
+class FontTexture {
  public:
 
   /**
    * Create a font from a filename and the font size.
    */
-  explicit TextureFont(core::TextureAtlas &atlas,
+  explicit FontTexture(core::Atlas &atlas,
                        std::string const &path,
                        float size);
 
@@ -25,7 +26,7 @@ class TextureFont {
    * Free all memory allocated by the font. However atlas isnt
    * deleted.
    */
-  ~TextureFont();
+  ~FontTexture();
 
   /**
    * Set the padding value.
@@ -49,7 +50,8 @@ class TextureFont {
   void _computeKerning();
 
   std::vector<ft::Glyph *> _glyphs;
-  core::TextureAtlas &_atlas;
+  core::Atlas &_atlas;
+  ft::FontFace _face;
   std::string _path;
   std::wstring _cache;
   size_t _padding;

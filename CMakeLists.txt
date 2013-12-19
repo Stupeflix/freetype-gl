@@ -2,8 +2,9 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.8.5 )
 
 project(distmapgen)
 
+# Config.
 set(CMAKE_CXX "g++")
-set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++0x")
+set(CMAKE_CXX_FLAGS "-ggdb3 -std=c++0x -Wno-write-strings")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules"
                       "${CMAKE_MODULE_PATH}" )
 
@@ -11,17 +12,23 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules"
 # Find required libraries.
 find_package(Math REQUIRED)
 find_package(FreeType REQUIRED)
+find_package(PNG REQUIRED)
 
+# Set source files.
 file(GLOB_RECURSE HEADERS "src/*.hpp")
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
+# Include libs directories.
 include_directories(${FREETYPE_INCLUDE_DIRS}
-                    ${CMAKE_CURRENT_SOURCE_DIR}
+                    ${MATH_INCLUDE_DIRS}
+                    ${PNG_INCLUDE_DIRS}
                     src)
 
+# Create executable and link libraries.
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${FREETYPE_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${MATH_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
 
 # Copy font and shaders into build directory for in-place testing
 file(GLOB FONTS "fonts/*.ttf")
